@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+
+    /* Raw light & dark palette tokens */
+    --outer-light: #EAECEF;
+    --outer-dark: #0A0B0E;
+    --canvas-light: #F5F6F8;
+    --canvas-dark: #111216;
+    --canvas-blur-light: rgba(245, 246, 248, 0.94);
+    --canvas-blur-dark: rgba(17, 18, 22, 0.92);
+    --surface-light: #FFFFFF;
+    --surface-dark: #1B1D24;
+    --surface-blur-light: rgba(255, 255, 255, 0.95);
+    --surface-blur-dark: rgba(27, 29, 36, 0.95);
+    --subtle-light: #F2F3F6;
+    --subtle-dark: #252832;
+    --subtle-hover-light: #E6E8EE;
+    --subtle-hover-dark: #2F3340;
+    --input-light: #F8F9FB;
+    --input-dark: #14161C;
+    --border-light: #E4E6EC;
+    --border-dark: #2B2F3B;
+    --border-soft-light: #F0F1F4;
+    --border-soft-dark: #232630;
+    --ink-light: #18181B;
+    --ink-dark: #F4F4F6;
+    --ink-secondary-light: #3F3F46;
+    --ink-secondary-dark: #D4D4D8;
+    --ink-muted-light: #64748B;
+    --ink-muted-dark: #A1A1AA;
+    --pill-active-bg-light: #27272A;
+    --pill-active-bg-dark: #F4F4F6;
+    --pill-active-fg-light: #FFFFFF;
+    --pill-active-fg-dark: #111216;
+    --heatmap-empty-light: #EFF1F4;
+    --heatmap-empty-dark: #232630;
+    --rail-light: #E4E4E7;
+    --rail-dark: #2E3240;
+
+    /* Default (light) values for browsers without light-dark() */
+    --bg-outer: var(--outer-light);
+    --bg-canvas: var(--canvas-light);
+    --bg-canvas-blur: var(--canvas-blur-light);
+    --bg-surface: var(--surface-light);
+    --bg-surface-blur: var(--surface-blur-light);
+    --bg-subtle: var(--subtle-light);
+    --bg-subtle-hover: var(--subtle-hover-light);
+    --bg-input: var(--input-light);
+    --border-color: var(--border-light);
+    --border-soft: var(--border-soft-light);
+    --fg-primary: var(--ink-light);
+    --fg-secondary: var(--ink-secondary-light);
+    --fg-muted: var(--ink-muted-light);
+    --pill-active-bg: var(--pill-active-bg-light);
+    --pill-active-fg: var(--pill-active-fg-light);
+    --heatmap-empty: var(--heatmap-empty-light);
+    --rail-color: var(--rail-light);
+    --accent: #1F9D75;
+
+    /* Map <meta name="color-scheme"> override back to CSS color-scheme */
+    &:has(> head > meta[name="color-scheme"][content="dark"]) {
+      color-scheme: dark;
+    }
+    &:has(> head > meta[name="color-scheme"][content="light"]) {
+      color-scheme: light;
+    }
+
+    /* Fallback dark values for browsers without light-dark() */
+    @media (prefers-color-scheme: dark) {
+      --bg-outer: var(--outer-dark);
+      --bg-canvas: var(--canvas-dark);
+      --bg-canvas-blur: var(--canvas-blur-dark);
+      --bg-surface: var(--surface-dark);
+      --bg-surface-blur: var(--surface-blur-dark);
+      --bg-subtle: var(--subtle-dark);
+      --bg-subtle-hover: var(--subtle-hover-dark);
+      --bg-input: var(--input-dark);
+      --border-color: var(--border-dark);
+      --border-soft: var(--border-soft-dark);
+      --fg-primary: var(--ink-dark);
+      --fg-secondary: var(--ink-secondary-dark);
+      --fg-muted: var(--ink-muted-dark);
+      --pill-active-bg: var(--pill-active-bg-dark);
+      --pill-active-fg: var(--pill-active-fg-dark);
+      --heatmap-empty: var(--heatmap-empty-dark);
+      --rail-color: var(--rail-dark);
+    }
+
+    /* Modern light-dark() automatically tracks color-scheme including manual overrides */
+    @supports (color: light-dark(white, black)) {
+      --bg-outer: light-dark(var(--outer-light), var(--outer-dark));
+      --bg-canvas: light-dark(var(--canvas-light), var(--canvas-dark));
+      --bg-canvas-blur: light-dark(var(--canvas-blur-light), var(--canvas-blur-dark));
+      --bg-surface: light-dark(var(--surface-light), var(--surface-dark));
+      --bg-surface-blur: light-dark(var(--surface-blur-light), var(--surface-blur-dark));
+      --bg-subtle: light-dark(var(--subtle-light), var(--subtle-dark));
+      --bg-subtle-hover: light-dark(var(--subtle-hover-light), var(--subtle-hover-dark));
+      --bg-input: light-dark(var(--input-light), var(--input-dark));
+      --border-color: light-dark(var(--border-light), var(--border-dark));
+      --border-soft: light-dark(var(--border-soft-light), var(--border-soft-dark));
+      --fg-primary: light-dark(var(--ink-light), var(--ink-dark));
+      --fg-secondary: light-dark(var(--ink-secondary-light), var(--ink-secondary-dark));
+      --fg-muted: light-dark(var(--ink-muted-light), var(--ink-muted-dark));
+      --pill-active-bg: light-dark(var(--pill-active-bg-light), var(--pill-active-bg-dark));
+      --pill-active-fg: light-dark(var(--pill-active-fg-light), var(--pill-active-fg-dark));
+      --heatmap-empty: light-dark(var(--heatmap-empty-light), var(--heatmap-empty-dark));
+      --rail-color: light-dark(var(--rail-light), var(--rail-dark));
+    }
+
+    accent-color: var(--accent);
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-canvas);
+    color: var(--fg-primary);
+    font-family:
+      "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei UI", "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Native <dialog> modal bottom-sheet styling
+   Following modern-web-guidance: prevent-page-scroll-under-modal-dialog & light-dismiss-a-dialog */
+dialog.daydot-dialog {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  color: var(--fg-primary);
+}
+
+dialog.daydot-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.daydot-dialog::backdrop {
+  background-color: rgba(10, 12, 18, 0.48);
+  backdrop-filter: blur(2.5px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Hide scrollbars cleanly for horizontal pill strips, sheets & heatmaps */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide native numeric input spin buttons */
+.no-number-spinner::-webkit-outer-spin-button,
+.no-number-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-number-spinner {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Safe area padding for mobile bottom nav & sheets */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@keyframes slideUpSheet {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-sheet-up {
+  animation: slideUpSheet 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (forced-colors: active) {
+  .daydot-card {
+    border: 1px solid CanvasText;
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "daydot",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "DayDot · 日迹 - 轻量无压力 Done List 与生活事件记录",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^4.4.0",
+    "lucide-react": "^1.76.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0"
+  }
+}

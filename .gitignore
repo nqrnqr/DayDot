@@ -1,5 +1,7 @@
 node_modules/
 dist/
+android/
+release-apk/
 .vite/
 *.tsbuildinfo
 *.local

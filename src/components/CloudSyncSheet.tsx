@@ -84,7 +84,7 @@ export function CloudSyncSheet({
     if (!parsed) {
       setTestFeedback({
         type: 'err',
-        text: '仓库格式不正确，请填写如 nqrnqr/DayDot-Data 或完整 GitHub 仓库链接',
+        text: '仓库格式不正确，请填写「用户名/仓库名」或完整 GitHub 仓库链接',
       });
       return null;
     }
@@ -266,7 +266,7 @@ export function CloudSyncSheet({
               type="text"
               value={repoInput}
               onChange={(e) => setRepoInput(e.target.value)}
-              placeholder="例如：nqrnqr/DayDot-Data"
+              placeholder="例如：username/DayDot-Data"
               className="w-full rounded-xl border border-transparent bg-[var(--bg-input)] px-3.5 py-2.5 text-sm text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] focus:border-[var(--border-color)] focus:bg-[var(--bg-surface)] focus:outline-none"
             />
           </div>

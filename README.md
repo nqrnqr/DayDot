@@ -24,8 +24,15 @@
 1. 每次向 `main` 分支推送代码后，工作流会自动安装依赖、以 `BASE_PATH=/DayDot/` 打包并发布到 `https://nqrnqr.github.io/DayDot/`。
 2. 如需修改仓库名，工作流会自动读取新仓库名作为子路径，无需手动改配置。
 
-## Android 手机安装（离线 PWA）
+## Android 安装（离线 PWA 或 原生 APK）
 
+### 方式 A：直接下载安装 Android APK（推荐，云端自动构建）
+本项目已接入 **Capacitor + GitHub Actions 云端自动打包**（配置文件见 [.github/workflows/build-apk.yml](.github/workflows/build-apk.yml)），本地无需安装 Android Studio：
+1. 打开仓库的 **Actions** → 左侧选择 **Build Android APK** → 点右上角 **Run workflow**（或推送 `v*` 标签自动发布到 Releases）。
+2. 等待约 2 分钟完成后，在任务详情底部的 **Artifacts** 下载 `DayDot-android-apk` 解压即可得到 `DayDot-android.apk` 装到手机。
+3. 支持 Android 系统返回手势与 GitHub 私有仓库多端同步。
+
+### 方式 B：离线 PWA
 1. 在 Android 手机的 Chrome / Edge 浏览器中打开 https://nqrnqr.github.io/DayDot/ 。
 2. 点击浏览器右上角菜单 `⋮` → 选择 **「安装应用」** 或 **「添加到主屏幕」**（已内置 `192×192` / `512×512` 桌面图标）。
 3. 首次加载完成后，Service Worker 会缓存应用资源，**日常使用可完全离线、无需代理秒开**；仅在拉取新版本时需要联网。

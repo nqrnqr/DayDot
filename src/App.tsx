@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { BarChart3, CalendarDays, Home, Settings, Undo2 } from 'lucide-react';
 import type { EventItem, EventRecord } from './types/models';
@@ -159,6 +161,57 @@ export function App() {
   useEffect(() => {
     ensureSeeded().then(() => setReady(true));
   }, []);
+
+  // Native Android hardware back button handling when packaged via Capacitor APK
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let removeListener: (() => void) | undefined;
+
+    void CapApp.addListener('backButton', () => {
+      if (recordSheetState.open) {
+        setRecordSheetState((prev) => ({ ...prev, open: false }));
+        return;
+      }
+      if (eventEditorState.open) {
+        setEventEditorState((prev) => ({ ...prev, open: false }));
+        return;
+      }
+      if (groupManagerOpen) {
+        setGroupManagerOpen(false);
+        return;
+      }
+      if (cloudSyncOpen) {
+        setCloudSyncOpen(false);
+        return;
+      }
+      if (selectedEventId) {
+        closeEventDetail();
+        return;
+      }
+      if (activeTab !== 'home') {
+        setActiveTab('home');
+        return;
+      }
+      void CapApp.minimizeApp();
+    }).then((handle) => {
+      removeListener = () => {
+        void handle.remove();
+      };
+    });
+
+    return () => {
+      removeListener?.();
+    };
+  }, [
+    recordSheetState.open,
+    eventEditorState.open,
+    groupManagerOpen,
+    cloudSyncOpen,
+    selectedEventId,
+    activeTab,
+    closeEventDetail,
+    setActiveTab,
+  ]);
 
   const runSync = useCallback(
     async (silent: boolean, overrideConfig?: GitHubSyncConfig) => {

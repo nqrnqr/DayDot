@@ -1,7 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
-  <rect width="128" height="128" rx="32" fill="#18181B" />
-  <rect x="24" y="24" width="32" height="32" rx="10" fill="#34D399" />
-  <rect x="72" y="24" width="32" height="32" rx="10" fill="#60A5FA" opacity="0.88" />
-  <rect x="24" y="72" width="32" height="32" rx="10" fill="#F472B6" opacity="0.88" />
-  <circle cx="88" cy="88" r="16" fill="#FBBF24" />
+  <defs>
+    <linearGradient id="daydot-paper" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FCFBF9" />
+      <stop offset="1" stop-color="#F2F1EC" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#daydot-paper)" />
+  <rect x="26" y="26" width="33" height="33" rx="11" fill="#2BA87F" />
+  <rect x="69" y="26" width="33" height="33" rx="11" fill="#6A9AD0" />
+  <rect x="26" y="69" width="33" height="33" rx="11" fill="#DE8096" />
+  <circle cx="85.5" cy="85.5" r="16.5" fill="#EBB04A" />
 </svg>

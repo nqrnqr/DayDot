@@ -236,7 +236,7 @@ export function EventEditorSheet({
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-3">
         {/* Card 1: Name, Collapsible Icon Picker & Accent Color */}
-        <section className="rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="rounded-[20px] bg-[var(--bg-surface)] p-4">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -248,7 +248,7 @@ export function EventEditorSheet({
               style={{ backgroundColor: color.soft, color: color.ink }}
             >
               <EventIcon name={icon} className="h-6 w-6" />
-              <span className="absolute -right-1 -bottom-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[var(--bg-surface)] text-[var(--fg-muted)] shadow-xs ring-1 ring-[var(--border-color)]">
+              <span className="absolute -right-1 -bottom-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[var(--bg-surface)] text-[var(--fg-muted)] ring-1 ring-[var(--border-color)]">
                 <ChevronDown
                   className={`h-3 w-3 transition-transform ${iconPickerOpen ? 'rotate-180' : ''}`}
                 />
@@ -261,12 +261,12 @@ export function EventEditorSheet({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="事件名称（如：引体向上、练琴）"
-              className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] px-3.5 py-2.5 text-[15px] font-semibold text-[var(--fg-primary)] placeholder:font-normal placeholder:text-[var(--fg-muted)] focus:border-[var(--fg-muted)] focus:bg-[var(--bg-surface)] focus:outline-none"
+              className="flex-1 rounded-xl border border-transparent bg-[var(--bg-input)] px-3.5 py-2.5 text-[15px] font-medium text-[var(--fg-primary)] placeholder:font-normal placeholder:text-[var(--fg-muted)] focus:border-[var(--border-color)] focus:bg-[var(--bg-surface)] focus:outline-none"
             />
           </div>
 
           {iconPickerOpen && (
-            <div className="mt-3.5 border-t border-[var(--border-soft)] pt-3.5">
+            <div className="mt-4">
               <div className="grid grid-cols-7 gap-2">
                 {ICON_CATALOG.map((item) => {
                   const selected = item.id === icon;
@@ -302,7 +302,7 @@ export function EventEditorSheet({
             </div>
           )}
 
-          <div className="mt-4 flex items-center justify-between gap-2 border-t border-[var(--border-soft)] pt-3.5">
+          <div className="mt-4 flex items-center justify-between gap-2 pt-1">
             {COLOR_PALETTE.map((token) => {
               const selected = token.id === colorId;
               return (
@@ -328,7 +328,7 @@ export function EventEditorSheet({
         </section>
 
         {/* Card 2: Group & Recording Mode */}
-        <section className="space-y-4 rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="space-y-4 rounded-[20px] bg-[var(--bg-surface)] p-4">
           <div>
             <div className="mb-2.5 flex items-center justify-between">
               <span className="text-xs font-semibold tracking-wide text-[var(--fg-muted)]">
@@ -399,8 +399,8 @@ export function EventEditorSheet({
             </div>
           </div>
 
-          <div className="border-t border-[var(--border-soft)] pt-3.5">
-            <span className="mb-2.5 block text-xs font-semibold tracking-wide text-[var(--fg-muted)]">
+          <div className="pt-1">
+            <span className="mb-2.5 block text-xs font-medium tracking-wide text-[var(--fg-muted)]">
               录入方式
             </span>
             <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-[var(--bg-subtle)] p-1">
@@ -471,7 +471,7 @@ export function EventEditorSheet({
         {fields.map((field) => (
           <section
             key={field.id}
-            className="space-y-3 rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
+            className="space-y-3 rounded-[20px] bg-[var(--bg-surface)] p-4"
           >
             <div className="flex items-center gap-2">
               <span
@@ -539,7 +539,7 @@ export function EventEditorSheet({
             </div>
 
             {field.type === 'number' && (
-              <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-3">
+              <div className="space-y-2.5 pt-1">
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <label className="mb-1 block text-[11px] font-medium text-[var(--fg-muted)]">
@@ -555,7 +555,7 @@ export function EventEditorSheet({
                         }))
                       }
                       placeholder="个 / 分钟"
-                      className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] px-3 py-2 text-xs font-medium text-[var(--fg-primary)] focus:border-[var(--fg-muted)] focus:bg-[var(--bg-surface)] focus:outline-none"
+                      className="w-full rounded-xl border border-transparent bg-[var(--bg-input)] px-3 py-2 text-xs font-medium text-[var(--fg-primary)] focus:border-[var(--border-color)] focus:bg-[var(--bg-surface)] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -574,7 +574,7 @@ export function EventEditorSheet({
                         }))
                       }
                       placeholder="20"
-                      className="no-number-spinner w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] px-3 py-2 text-xs font-medium text-[var(--fg-primary)] tabular-nums focus:border-[var(--fg-muted)] focus:bg-[var(--bg-surface)] focus:outline-none"
+                      className="no-number-spinner w-full rounded-xl border border-transparent bg-[var(--bg-input)] px-3 py-2 text-xs font-medium text-[var(--fg-primary)] tabular-nums focus:border-[var(--border-color)] focus:bg-[var(--bg-surface)] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -597,14 +597,14 @@ export function EventEditorSheet({
                       }));
                     }}
                     placeholder="15, 20, 25, 30"
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] px-3 py-2 text-xs font-medium text-[var(--fg-primary)] tabular-nums focus:border-[var(--fg-muted)] focus:bg-[var(--bg-surface)] focus:outline-none"
+                    className="w-full rounded-xl border border-transparent bg-[var(--bg-input)] px-3 py-2 text-xs font-medium text-[var(--fg-primary)] tabular-nums focus:border-[var(--border-color)] focus:bg-[var(--bg-surface)] focus:outline-none"
                   />
                 </div>
               </div>
             )}
 
             {field.type === 'select' && (
-              <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-3">
+              <div className="space-y-2.5 pt-1">
                 <div className="flex flex-wrap gap-1.5">
                   {field.options.map((opt) => {
                     const isDef = field.defaultOptionIds?.includes(opt.id);

@@ -170,12 +170,33 @@ export function CalendarViewPage({
           <div
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
-            className="daydot-card rounded-[24px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
+            className="daydot-card rounded-[24px] bg-[var(--bg-surface)] p-4"
           >
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-[15px] font-bold text-[var(--fg-primary)]">
-                {formatMonthTitle(calYear, calMonth)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-bold text-[var(--fg-primary)]">
+                  {formatMonthTitle(calYear, calMonth)}
+                </span>
+                {(calYear !== now.getFullYear() ||
+                  calMonth !== now.getMonth() ||
+                  selectedDateKey !== toDateKey(now)) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = new Date();
+                      setCalYear(t.getFullYear());
+                      setCalMonth(t.getMonth());
+                      setSelectedDateKey(toDateKey(t));
+                    }}
+                    aria-label="回到今天"
+                    title="回到今天"
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition active:scale-90"
+                    style={{ backgroundColor: emerald.soft, color: emerald.ink }}
+                  >
+                    今
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -184,18 +205,6 @@ export function CalendarViewPage({
                   className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const t = new Date();
-                    setCalYear(t.getFullYear());
-                    setCalMonth(t.getMonth());
-                    setSelectedDateKey(toDateKey(t));
-                  }}
-                  className="rounded-full px-2.5 py-0.5 text-xs font-semibold text-[var(--fg-muted)] hover:bg-[var(--bg-subtle)]"
-                >
-                  今天
                 </button>
                 <button
                   type="button"
@@ -291,7 +300,7 @@ export function CalendarViewPage({
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') onEditRecord(ev, rec);
                       }}
-                      className="daydot-card flex cursor-pointer items-start gap-3 rounded-[20px] bg-[var(--bg-surface)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition active:scale-[0.99]"
+                      className="daydot-card flex cursor-pointer items-start gap-3 rounded-[20px] bg-[var(--bg-surface)] p-3.5 transition active:scale-[0.99]"
                     >
                       <button
                         type="button"
@@ -363,7 +372,7 @@ export function CalendarViewPage({
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') onEditRecord(ev, rec);
                         }}
-                        className="daydot-card flex cursor-pointer items-start gap-3 rounded-[20px] bg-[var(--bg-surface)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition active:scale-[0.99]"
+                        className="daydot-card flex cursor-pointer items-start gap-3 rounded-[20px] bg-[var(--bg-surface)] p-3.5 transition active:scale-[0.99]"
                       >
                         <div
                           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px]"

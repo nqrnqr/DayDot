@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Pencil,
   Plus,
-  RotateCcw,
 } from 'lucide-react';
 import type { EventItem, EventRecord, SelectFieldDef } from '../types/models';
 import { getColorToken } from '../constants/theme';
@@ -303,10 +302,10 @@ export function EventDetailPage({
             )}
           >
             <div className="mb-2 flex items-center justify-between px-1">
-              <span className="text-[15px] font-bold text-[var(--fg-primary)]">
-                {formatMonthTitle(calYear, calMonth)}
-              </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-bold text-[var(--fg-primary)]">
+                  {formatMonthTitle(calYear, calMonth)}
+                </span>
                 {!isCurrentCalMonth && (
                   <button
                     type="button"
@@ -315,13 +314,16 @@ export function EventDetailPage({
                       setCalYear(t.getFullYear());
                       setCalMonth(t.getMonth());
                     }}
-                    className="mr-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition active:scale-95"
+                    aria-label="回到本月"
+                    title="回到本月"
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition active:scale-90"
                     style={{ backgroundColor: color.soft, color: color.ink }}
                   >
-                    <RotateCcw className="h-3 w-3" />
-                    回到本月
+                    今
                   </button>
                 )}
+              </div>
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => shiftMonth(-1)}
@@ -551,11 +553,12 @@ export function EventDetailPage({
                   <button
                     type="button"
                     onClick={() => setStatsAnchor(new Date())}
-                    className="ml-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold transition active:scale-95"
+                    aria-label={resetPeriodLabel}
+                    title={resetPeriodLabel}
+                    className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition active:scale-90"
                     style={{ backgroundColor: color.soft, color: color.ink }}
                   >
-                    <RotateCcw className="h-2.5 w-2.5" />
-                    {resetPeriodLabel}
+                    今
                   </button>
                 )}
               </div>
@@ -616,84 +619,84 @@ export function EventDetailPage({
 
           {/* 2x2 KPI Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4">
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[var(--fg-primary)] tabular-nums">
+                <span className="text-[22px] font-medium text-[var(--fg-primary)] tabular-nums">
                   {stats.totalCount}
                 </span>
-                <span className="text-xs font-medium text-[var(--fg-muted)]">次</span>
+                <span className="text-xs text-[var(--fg-muted)]">次</span>
               </div>
-              <p className="mt-1 text-xs font-medium text-[var(--fg-muted)]">记录次数</p>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">记录次数</p>
             </div>
 
-            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4">
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[var(--fg-primary)] tabular-nums">
+                <span className="text-[22px] font-medium text-[var(--fg-primary)] tabular-nums">
                   {stats.activeDays}
                 </span>
-                <span className="text-xs font-medium text-[var(--fg-muted)]">天</span>
+                <span className="text-xs text-[var(--fg-muted)]">天</span>
               </div>
-              <p className="mt-1 text-xs font-medium text-[var(--fg-muted)]">记录天数</p>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">记录天数</p>
             </div>
 
-            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4">
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[var(--fg-primary)] tabular-nums">
+                <span className="text-[22px] font-medium text-[var(--fg-primary)] tabular-nums">
                   {formatCleanNumber(stats.dailyAverage)}
                 </span>
-                <span className="text-xs font-medium text-[var(--fg-muted)]">次</span>
+                <span className="text-xs text-[var(--fg-muted)]">次</span>
               </div>
-              <p className="mt-1 text-xs font-medium text-[var(--fg-muted)]">每日平均</p>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">每日平均</p>
             </div>
 
-            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] p-4">
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[var(--fg-primary)] tabular-nums">
+                <span className="text-[22px] font-medium text-[var(--fg-primary)] tabular-nums">
                   {stats.averageIntervalDays === null
                     ? '-'
                     : formatCleanNumber(stats.averageIntervalDays)}
                 </span>
                 {stats.averageIntervalDays !== null && (
-                  <span className="text-xs font-medium text-[var(--fg-muted)]">天</span>
+                  <span className="text-xs text-[var(--fg-muted)]">天</span>
                 )}
               </div>
-              <p className="mt-1 text-xs font-medium text-[var(--fg-muted)]">平均间隔</p>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">平均间隔</p>
             </div>
           </div>
 
           {primaryNumberField && numericInsights && (
-            <div className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-              <h3 className="mb-3 text-[15px] font-semibold text-[var(--fg-primary)]">
+            <div className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4">
+              <h3 className="mb-3 text-[15px] font-medium text-[var(--fg-primary)]">
                 {primaryNumberField.name}统计（{primaryNumberField.unit}）
               </h3>
-              <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="grid grid-cols-3 gap-2.5 text-center">
                 <div
                   className="rounded-2xl py-3"
                   style={{ backgroundColor: color.soft }}
                 >
                   <div
-                    className="text-lg font-bold tabular-nums"
+                    className="text-lg font-medium tabular-nums"
                     style={{ color: color.ink }}
                   >
                     {formatCleanNumber(numericInsights.sum)}
                   </div>
-                  <div className="mt-0.5 text-[11px] font-medium text-[var(--fg-muted)]">
+                  <div className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
                     累计总量
                   </div>
                 </div>
                 <div className="rounded-2xl bg-[var(--bg-canvas)] py-3">
-                  <div className="text-lg font-bold text-[var(--fg-primary)] tabular-nums">
+                  <div className="text-lg font-medium text-[var(--fg-primary)] tabular-nums">
                     {formatCleanNumber(numericInsights.avg)}
                   </div>
-                  <div className="mt-0.5 text-[11px] font-medium text-[var(--fg-muted)]">
+                  <div className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
                     单次平均
                   </div>
                 </div>
                 <div className="rounded-2xl bg-[var(--bg-canvas)] py-3">
-                  <div className="text-lg font-bold text-[var(--fg-primary)] tabular-nums">
+                  <div className="text-lg font-medium text-[var(--fg-primary)] tabular-nums">
                     {formatCleanNumber(numericInsights.max)}
                   </div>
-                  <div className="mt-0.5 text-[11px] font-medium text-[var(--fg-muted)]">
+                  <div className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
                     单次最高
                   </div>
                 </div>
@@ -723,9 +726,9 @@ export function EventDetailPage({
             return (
               <div
                 key={sf.id}
-                className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
+                className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4"
               >
-                <h3 className="mb-3 text-[15px] font-semibold text-[var(--fg-primary)]">
+                <h3 className="mb-3 text-[15px] font-medium text-[var(--fg-primary)]">
                   {sf.name}分布
                 </h3>
                 <div className="space-y-2.5">

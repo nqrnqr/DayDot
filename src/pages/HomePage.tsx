@@ -116,12 +116,12 @@ function SortableEventCard({
           onSelect();
         }
       }}
-      className={`daydot-card group flex min-h-[126px] flex-col justify-between rounded-[22px] bg-[var(--bg-surface)] p-3.5 transition-shadow ${
+      className={`daydot-card group flex min-h-[126px] flex-col justify-between rounded-[22px] bg-[var(--bg-surface)] p-4 transition-transform duration-150 ${
         organizeMode
           ? isDragging
-            ? 'scale-[1.04] cursor-grabbing touch-none shadow-2xl ring-2 ring-[var(--accent)]'
-            : 'cursor-grab touch-none shadow-[0_1px_2px_rgba(15,23,42,0.05)] ring-1 ring-[var(--border-color)]'
-          : 'cursor-pointer shadow-[0_1px_2px_rgba(15,23,42,0.05)] hover:shadow-[0_4px_14px_rgba(15,23,42,0.08)] active:scale-[0.98]'
+            ? 'scale-[1.03] cursor-grabbing touch-none shadow-xl ring-2 ring-[var(--accent)]'
+            : 'cursor-grab touch-none ring-1 ring-[var(--border-color)]'
+          : 'cursor-pointer active:scale-[0.98]'
       }`}
     >
       {/* Top row: Pastel icon badge + Quick Action OR Pin button */}
@@ -186,10 +186,10 @@ function SortableEventCard({
         )}
       </div>
 
-      {/* Bottom row: Clean Title + Status (no default-value clutter) */}
+      {/* Bottom row: Clean Title + Status */}
       <div className="mt-4">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="truncate text-[15px] font-semibold text-[var(--fg-primary)]">
+          <h2 className="truncate text-[15px] font-medium text-[var(--fg-primary)]">
             {event.name}
           </h2>
           {organizeMode && (
@@ -197,7 +197,7 @@ function SortableEventCard({
           )}
         </div>
         <p
-          className="mt-1 truncate text-xs font-medium"
+          className="mt-1 truncate text-xs font-normal"
           style={{
             color:
               !organizeMode && todayRecs.length > 0

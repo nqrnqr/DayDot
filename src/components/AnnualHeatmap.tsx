@@ -83,9 +83,9 @@ export function AnnualHeatmap({
   };
 
   return (
-    <div className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+    <div className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-[15px] font-semibold text-[var(--fg-primary)]">
+        <h3 className="text-[15px] font-medium text-[var(--fg-primary)]">
           {year} 年热力图
         </h3>
         {selectedCell ? (

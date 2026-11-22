@@ -4,40 +4,40 @@
   :root {
     color-scheme: light dark;
 
-    /* Raw light & dark palette tokens */
-    --outer-light: #EAECEF;
+    /* Raw light & dark palette tokens (soft, paper-like minimalist tones) */
+    --outer-light: #EFEFF2;
     --outer-dark: #0A0B0E;
-    --canvas-light: #F5F6F8;
+    --canvas-light: #F7F7F8;
     --canvas-dark: #111216;
-    --canvas-blur-light: rgba(245, 246, 248, 0.94);
+    --canvas-blur-light: rgba(247, 247, 248, 0.94);
     --canvas-blur-dark: rgba(17, 18, 22, 0.92);
     --surface-light: #FFFFFF;
     --surface-dark: #1B1D24;
     --surface-blur-light: rgba(255, 255, 255, 0.95);
     --surface-blur-dark: rgba(27, 29, 36, 0.95);
-    --subtle-light: #F2F3F6;
+    --subtle-light: #F1F2F4;
     --subtle-dark: #252832;
-    --subtle-hover-light: #E6E8EE;
+    --subtle-hover-light: #E8E9ED;
     --subtle-hover-dark: #2F3340;
-    --input-light: #F8F9FB;
+    --input-light: #F5F6F8;
     --input-dark: #14161C;
-    --border-light: #E4E6EC;
+    --border-light: #E8E9EE;
     --border-dark: #2B2F3B;
-    --border-soft-light: #F0F1F4;
+    --border-soft-light: #F2F3F5;
     --border-soft-dark: #232630;
-    --ink-light: #18181B;
-    --ink-dark: #F4F4F6;
-    --ink-secondary-light: #3F3F46;
-    --ink-secondary-dark: #D4D4D8;
-    --ink-muted-light: #64748B;
-    --ink-muted-dark: #A1A1AA;
-    --pill-active-bg-light: #27272A;
-    --pill-active-bg-dark: #F4F4F6;
+    --ink-light: #26262A;
+    --ink-dark: #ECECF0;
+    --ink-secondary-light: #4A4A52;
+    --ink-secondary-dark: #C8C8D0;
+    --ink-muted-light: #7A7A85;
+    --ink-muted-dark: #9B9BA6;
+    --pill-active-bg-light: #2C2C30;
+    --pill-active-bg-dark: #ECECF0;
     --pill-active-fg-light: #FFFFFF;
     --pill-active-fg-dark: #111216;
-    --heatmap-empty-light: #EFF1F4;
+    --heatmap-empty-light: #EFEFF2;
     --heatmap-empty-dark: #232630;
-    --rail-light: #E4E4E7;
+    --rail-light: #E6E7EB;
     --rail-dark: #2E3240;
 
     /* Default (light) values for browsers without light-dark() */

@@ -102,7 +102,7 @@ export function BottomSheetDialog({
             <div className="h-1 w-9 rounded-full bg-[var(--border-color)]" />
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-b border-[var(--border-soft)] px-5 py-3.5">
+          <div className="flex items-center justify-between gap-3 px-5 pt-3.5 pb-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 {accentColor && (
@@ -114,7 +114,7 @@ export function BottomSheetDialog({
                 )}
                 <h2
                   id={titleId}
-                  className="truncate text-[17px] font-semibold tracking-tight text-[var(--fg-primary)]"
+                  className="truncate text-[16px] font-medium tracking-tight text-[var(--fg-primary)]"
                 >
                   {title}
                 </h2>
@@ -141,13 +141,13 @@ export function BottomSheetDialog({
 
           <div
             style={bodyStyle}
-            className={`no-scrollbar flex-1 overflow-y-auto px-4 py-4 ${footer ? '' : 'pb-safe'}`}
+            className={`no-scrollbar flex-1 overflow-y-auto px-4 py-3.5 ${footer ? '' : 'pb-safe'}`}
           >
             {children}
           </div>
 
           {footer && (
-            <div className="pb-safe border-t border-[var(--border-soft)] bg-[var(--bg-surface)] px-4 pt-3">
+            <div className="pb-safe bg-[var(--bg-surface)] px-4 pt-3">
               {footer}
             </div>
           )}

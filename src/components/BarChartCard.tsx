@@ -28,7 +28,7 @@ export function BarChartCard({ bars, color, mode, unit }: BarChartCardProps) {
   const dense = bars.length > 15;
 
   return (
-    <div className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+    <div className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4">
       <div className="mb-2 flex min-h-6 items-center justify-between text-xs">
         <span className="font-medium text-[var(--fg-muted)]">
           {mode === 'value' ? `趋势分布 (${unit})` : '记录次数趋势'}

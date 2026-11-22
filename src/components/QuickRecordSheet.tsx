@@ -154,10 +154,10 @@ export function QuickRecordSheet({
           type="submit"
           form={formId}
           disabled={saving}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[15px] font-semibold text-white shadow-sm transition active:scale-[0.98] disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[15px] font-medium text-white transition active:scale-[0.98] disabled:opacity-60"
           style={{ backgroundColor: color.solid }}
         >
-          <Check className="h-4.5 w-4.5 stroke-[2.4]" />
+          <Check className="h-4.5 w-4.5 stroke-[2.2]" />
           {editingRecord ? '保存修改' : '确认记录'}
         </button>
       }
@@ -184,14 +184,14 @@ export function QuickRecordSheet({
             return (
               <div
                 key={field.id}
-                className={`rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)] ${
+                className={`rounded-[20px] bg-[var(--bg-surface)] p-4 ${
                   isMissing ? 'ring-1.5 ring-rose-500' : ''
                 }`}
               >
                 <div className="mb-2.5 flex items-center justify-between">
                   <label
                     htmlFor={`field-${field.id}`}
-                    className="text-xs font-semibold tracking-wide text-[var(--fg-muted)]"
+                    className="text-xs font-medium tracking-wide text-[var(--fg-muted)]"
                   >
                     {field.name}
                     {field.required && (
@@ -209,7 +209,7 @@ export function QuickRecordSheet({
 
                 <label
                   htmlFor={`field-${field.id}`}
-                  className="flex cursor-text items-baseline justify-between rounded-2xl border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-3 transition focus-within:border-[var(--fg-muted)] focus-within:bg-[var(--bg-surface)]"
+                  className="flex cursor-text items-baseline justify-between rounded-2xl border border-transparent bg-[var(--bg-input)] px-4 py-3 transition focus-within:border-[var(--border-color)] focus-within:bg-[var(--bg-surface)]"
                 >
                   <input
                     id={`field-${field.id}`}
@@ -227,10 +227,10 @@ export function QuickRecordSheet({
                       if (txt !== '') clearMissing(field.id);
                     }}
                     placeholder="0"
-                    className="no-number-spinner w-full bg-transparent text-[30px] leading-none font-bold tracking-tight text-[var(--fg-primary)] tabular-nums placeholder:text-[var(--fg-muted)] focus:outline-none"
+                    className="no-number-spinner w-full bg-transparent text-[28px] leading-none font-semibold tracking-tight text-[var(--fg-primary)] tabular-nums placeholder:text-[var(--fg-muted)] focus:outline-none"
                   />
                   {field.unit && (
-                    <span className="ml-2 shrink-0 text-sm font-semibold text-[var(--fg-muted)]">
+                    <span className="ml-2 shrink-0 text-sm font-medium text-[var(--fg-muted)]">
                       {field.unit}
                     </span>
                   )}
@@ -292,12 +292,12 @@ export function QuickRecordSheet({
             return (
               <div
                 key={field.id}
-                className={`rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)] ${
+                className={`rounded-[20px] bg-[var(--bg-surface)] p-4 ${
                   isMissing ? 'ring-1.5 ring-rose-500' : ''
                 }`}
               >
                 <div className="mb-2.5 flex items-center justify-between">
-                  <span className="text-xs font-semibold tracking-wide text-[var(--fg-muted)]">
+                  <span className="text-xs font-medium tracking-wide text-[var(--fg-muted)]">
                     {field.name}
                     {field.required && (
                       <span className="ml-0.5 text-rose-500" aria-hidden="true">
@@ -385,10 +385,10 @@ export function QuickRecordSheet({
         })}
 
         {/* Note Card */}
-        <div className="rounded-[20px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <div className="rounded-[20px] bg-[var(--bg-surface)] p-4">
           <label
             htmlFor={`note-${formId}`}
-            className="mb-2 block text-xs font-semibold tracking-wide text-[var(--fg-muted)]"
+            className="mb-2 block text-xs font-medium tracking-wide text-[var(--fg-muted)]"
           >
             备注
           </label>
@@ -398,22 +398,22 @@ export function QuickRecordSheet({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="写点状态或细节..."
-            className="w-full resize-none rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] px-3.5 py-2.5 text-sm text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] focus:border-[var(--fg-muted)] focus:bg-[var(--bg-surface)] focus:outline-none"
+            className="w-full resize-none rounded-xl border border-transparent bg-[var(--bg-input)] px-3.5 py-2.5 text-sm text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] focus:border-[var(--border-color)] focus:bg-[var(--bg-surface)] focus:outline-none"
           />
         </div>
 
         {/* Time Card */}
-        <div className="rounded-[20px] bg-[var(--bg-surface)] px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <div className="rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5">
           <button
             type="button"
             onClick={() => setShowTimePicker((v) => !v)}
-            className="flex w-full items-center justify-between text-xs font-semibold text-[var(--fg-muted)]"
+            className="flex w-full items-center justify-between text-xs font-medium text-[var(--fg-muted)]"
           >
             <span className="inline-flex items-center gap-1.5">
               <CalendarClock className="h-4 w-4" />
               记录时间
             </span>
-            <span className="font-medium text-[var(--fg-primary)] tabular-nums">
+            <span className="font-normal text-[var(--fg-primary)] tabular-nums">
               {dateTimeStr.replace('T', ' ')}
             </span>
           </button>
@@ -422,7 +422,7 @@ export function QuickRecordSheet({
               type="datetime-local"
               value={dateTimeStr}
               onChange={(e) => setDateTimeStr(e.target.value)}
-              className="mt-2.5 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--fg-primary)] focus:border-[var(--fg-muted)] focus:bg-[var(--bg-surface)] focus:outline-none"
+              className="mt-2.5 w-full rounded-xl border border-transparent bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--fg-primary)] focus:border-[var(--border-color)] focus:bg-[var(--bg-surface)] focus:outline-none"
             />
           )}
         </div>

@@ -112,7 +112,7 @@ export function SettingsPage({
 
       <main className="space-y-3.5 px-4 pt-1">
         {/* Local Status Card */}
-        <section className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4">
           <div className="flex items-center gap-3">
             <div
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
@@ -132,7 +132,7 @@ export function SettingsPage({
         </section>
 
         {/* Appearance / Dark Mode Toggle */}
-        <section className="daydot-card space-y-3 rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="daydot-card space-y-3 rounded-[22px] bg-[var(--bg-surface)] p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-bold text-[var(--fg-primary)]">
               <Palette className="h-4 w-4 text-[var(--fg-muted)]" />
@@ -182,7 +182,7 @@ export function SettingsPage({
         </section>
 
         {/* Clean Single-Row Entry for Group Management */}
-        <section className="daydot-card overflow-hidden rounded-[22px] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="daydot-card overflow-hidden rounded-[22px] bg-[var(--bg-surface)]">
           <button
             type="button"
             onClick={onManageGroups}
@@ -200,7 +200,7 @@ export function SettingsPage({
         </section>
 
         {/* Backup & Restore */}
-        <section className="daydot-card space-y-3 rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="daydot-card space-y-3 rounded-[22px] bg-[var(--bg-surface)] p-4">
           <div className="flex items-center gap-2 text-sm font-bold text-[var(--fg-primary)]">
             <Database className="h-4 w-4 text-[var(--fg-muted)]" />
             数据备份与恢复（JSON）
@@ -264,7 +264,7 @@ export function SettingsPage({
         </section>
 
         {/* Android PWA Tip */}
-        <section className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="daydot-card rounded-[22px] bg-[var(--bg-surface)] p-4">
           <div className="flex items-start gap-3">
             <div
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
@@ -284,7 +284,7 @@ export function SettingsPage({
         </section>
 
         {/* Demo / Reset Actions */}
-        <section className="daydot-card space-y-2 rounded-[22px] bg-[var(--bg-surface)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+        <section className="daydot-card space-y-2 rounded-[22px] bg-[var(--bg-surface)] p-4">
           <button
             type="button"
             onClick={handleResetDemo}

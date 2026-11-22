@@ -74,7 +74,7 @@ function SortableGroupRow({
       className={`flex items-center gap-2.5 rounded-[18px] bg-[var(--bg-surface)] px-3 py-3 transition-shadow ${
         isDragging
           ? 'scale-[1.02] shadow-lg ring-1 ring-[var(--border-color)]'
-          : 'shadow-[0_1px_2px_rgba(15,23,42,0.05)]'
+          : ''
       }`}
     >
       {/* Drag Handle */}

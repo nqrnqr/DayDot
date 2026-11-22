@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { BarChart3, CalendarDays, Home, Settings, Undo2 } from 'lucide-react';
 import type { EventItem, EventRecord } from './types/models';
@@ -15,6 +15,42 @@ import { GroupManagerSheet } from './components/GroupManagerSheet';
 
 type MainTab = 'home' | 'trends' | 'calendar' | 'settings';
 
+interface RouteState {
+  tab: MainTab;
+  eventId: string | null;
+}
+
+const VALID_TABS: MainTab[] = ['home', 'trends', 'calendar', 'settings'];
+
+function parseHashRoute(): RouteState {
+  const raw = window.location.hash.replace(/^#\/?/, '').trim();
+  if (!raw) return { tab: 'home', eventId: null };
+
+  if (raw.startsWith('event/')) {
+    const rest = raw.slice('event/'.length);
+    const [idPart, queryPart] = rest.split('?');
+    const params = new URLSearchParams(queryPart ?? '');
+    const fromTab = params.get('from') as MainTab | null;
+    return {
+      tab: fromTab && VALID_TABS.includes(fromTab) ? fromTab : 'home',
+      eventId: idPart ? decodeURIComponent(idPart) : null,
+    };
+  }
+
+  if (VALID_TABS.includes(raw as MainTab)) {
+    return { tab: raw as MainTab, eventId: null };
+  }
+
+  return { tab: 'home', eventId: null };
+}
+
+function buildHash(tab: MainTab, eventId: string | null): string {
+  if (eventId) {
+    return `#event/${encodeURIComponent(eventId)}${tab !== 'home' ? `?from=${tab}` : ''}`;
+  }
+  return `#${tab}`;
+}
+
 interface ToastState {
   message: string;
   undoRecordId?: string;
@@ -22,8 +58,11 @@ interface ToastState {
 
 export function App() {
   const [ready, setReady] = useState(false);
-  const [activeTab, setActiveTab] = useState<MainTab>('home');
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const initialRoute = useMemo(() => parseHashRoute(), []);
+  const [activeTab, setActiveTabState] = useState<MainTab>(initialRoute.tab);
+  const [selectedEventId, setSelectedEventIdState] = useState<string | null>(
+    initialRoute.eventId,
+  );
   const { preference, systemDark, isDark, setPreference } = useThemeMode();
 
   const [recordSheetState, setRecordSheetState] = useState<{
@@ -42,6 +81,48 @@ export function App() {
 
   const [toast, setToast] = useState<ToastState | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+
+  const navigate = useCallback((nextTab: MainTab, nextEventId: string | null) => {
+    setActiveTabState(nextTab);
+    setSelectedEventIdState(nextEventId);
+    const targetHash = buildHash(nextTab, nextEventId);
+    if (window.location.hash !== targetHash) {
+      window.history.pushState(null, '', targetHash);
+    }
+  }, []);
+
+  const setActiveTab = useCallback(
+    (tab: MainTab) => {
+      navigate(tab, null);
+    },
+    [navigate],
+  );
+
+  const openEventDetail = useCallback(
+    (eventId: string) => {
+      navigate(activeTab, eventId);
+    },
+    [activeTab, navigate],
+  );
+
+  const closeEventDetail = useCallback(() => {
+    navigate(activeTab, null);
+  }, [activeTab, navigate]);
+
+  // Sync browser back/forward & manual hash changes
+  useEffect(() => {
+    const syncFromHash = () => {
+      const parsed = parseHashRoute();
+      setActiveTabState(parsed.tab);
+      setSelectedEventIdState(parsed.eventId);
+    };
+    window.addEventListener('hashchange', syncFromHash);
+    window.addEventListener('popstate', syncFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncFromHash);
+      window.removeEventListener('popstate', syncFromHash);
+    };
+  }, []);
 
   const showToast = (message: string, undoRecordId?: string) => {
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
@@ -99,7 +180,7 @@ export function App() {
       await db.records.where('eventId').equals(event.id).delete();
       await db.events.delete(event.id);
     });
-    setSelectedEventId(null);
+    closeEventDetail();
     showToast(`已删除事件「${event.name}」`);
   };
 
@@ -121,7 +202,7 @@ export function App() {
             event={selectedEvent}
             records={selectedEventRecords}
             isDark={isDark}
-            onBack={() => setSelectedEventId(null)}
+            onBack={closeEventDetail}
             onEditEvent={(ev) =>
               setEventEditorState({ open: true, editingEvent: ev })
             }
@@ -149,7 +230,7 @@ export function App() {
                 events={events}
                 records={records}
                 isDark={isDark}
-                onSelectEvent={(id) => setSelectedEventId(id)}
+                onSelectEvent={openEventDetail}
                 onQuickRecord={handleQuickRecord}
                 onOpenRecordSheet={(ev) =>
                   setRecordSheetState({
@@ -168,10 +249,11 @@ export function App() {
 
             {activeTab === 'trends' && (
               <TrendsPage
+                groups={groups}
                 events={events}
                 records={records}
                 isDark={isDark}
-                onSelectEvent={(id) => setSelectedEventId(id)}
+                onSelectEvent={openEventDetail}
               />
             )}
 
@@ -180,7 +262,7 @@ export function App() {
                 events={events}
                 records={records}
                 isDark={isDark}
-                onSelectEvent={(id) => setSelectedEventId(id)}
+                onSelectEvent={openEventDetail}
                 onEditRecord={(ev, rec) =>
                   setRecordSheetState({
                     open: true,

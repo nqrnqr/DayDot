@@ -9,6 +9,7 @@ import type { EventItem, EventRecord, SelectFieldDef } from '../types/models';
 import { getColorToken } from '../constants/theme';
 import {
   buildMonthGrid,
+  formatCompactInterval,
   formatFullDate,
   formatMonthTitle,
   formatTime,
@@ -51,6 +52,27 @@ export function EventDetailPage({
   const primaryNumberField = useMemo(() => getPrimaryNumberField(event), [event]);
 
   const [tab, setTab] = useState<'records' | 'stats'>('records');
+  const [timeDisplayMode, setTimeDisplayMode] = useState<'clock' | 'interval'>(() => {
+    try {
+      return localStorage.getItem('daydot_timeline_time_mode') === 'interval'
+        ? 'interval'
+        : 'clock';
+    } catch {
+      return 'clock';
+    }
+  });
+
+  const toggleTimeDisplayMode = () => {
+    setTimeDisplayMode((prev) => {
+      const next = prev === 'clock' ? 'interval' : 'clock';
+      try {
+        localStorage.setItem('daydot_timeline_time_mode', next);
+      } catch {
+        // Ignore storage error
+      }
+      return next;
+    });
+  };
 
   // Record Tab Calendar state
   const now = new Date();
@@ -91,6 +113,21 @@ export function EventDetailPage({
     () => [...records].sort((a, b) => b.timestamp - a.timestamp),
     [records],
   );
+
+  // Map each recordId -> compact interval since the immediately preceding earlier record of this event
+  const intervalByRecordId = useMemo(() => {
+    const map = new Map<string, string>();
+    // sortedRecords is descending (newest -> oldest), so sortedRecords[i + 1] is the previous earlier record
+    for (let i = 0; i < sortedRecords.length; i++) {
+      const cur = sortedRecords[i];
+      const prev = sortedRecords[i + 1];
+      map.set(
+        cur.id,
+        prev ? formatCompactInterval(cur.timestamp - prev.timestamp) : '-',
+      );
+    }
+    return map;
+  }, [sortedRecords]);
 
   const recordCountByDay = useMemo(() => {
     const map = new Map<string, number>();
@@ -220,7 +257,7 @@ export function EventDetailPage({
         <div
           role="tablist"
           aria-label="事件视图切换"
-          className="inline-flex rounded-full p-[2px]"
+          className="inline-flex overflow-hidden rounded-full"
           style={{
             backgroundColor: 'var(--bg-surface)',
             border: `1px solid ${color.solid}`,
@@ -231,7 +268,7 @@ export function EventDetailPage({
             role="tab"
             aria-selected={tab === 'records'}
             onClick={() => setTab('records')}
-            className="rounded-full px-5 py-1 text-[13px] font-semibold transition"
+            className="rounded-full px-5 py-1 text-[13px] font-medium transition"
             style={
               tab === 'records'
                 ? { backgroundColor: color.solid, color: '#FFFFFF' }
@@ -245,7 +282,7 @@ export function EventDetailPage({
             role="tab"
             aria-selected={tab === 'stats'}
             onClick={() => setTab('stats')}
-            className="rounded-full px-5 py-1 text-[13px] font-semibold transition"
+            className="rounded-full px-5 py-1 text-[13px] font-medium transition"
             style={
               tab === 'stats'
                 ? { backgroundColor: color.solid, color: '#FFFFFF' }
@@ -268,14 +305,14 @@ export function EventDetailPage({
       </header>
 
       {/* Event Name Banner */}
-      <div className="flex items-center justify-between px-5 pb-2">
+      <div className="flex items-center justify-between px-5 pb-1.5">
         <div className="flex items-center gap-2">
           <span
-            className="h-2.5 w-2.5 rounded-full"
+            className="h-2 w-2 rounded-full"
             style={{ backgroundColor: color.solid }}
           />
-          <h1 className="text-lg font-bold text-[var(--fg-primary)]">{event.name}</h1>
-          <span className="text-xs font-medium text-[var(--fg-muted)]">
+          <h1 className="text-[16px] font-medium text-[var(--fg-primary)]">{event.name}</h1>
+          <span className="text-xs text-[var(--fg-muted)]">
             共 {records.length} 条记录
           </span>
         </div>
@@ -283,7 +320,7 @@ export function EventDetailPage({
           <button
             type="button"
             onClick={() => setSelectedDateKey(null)}
-            className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-0.5 text-xs font-semibold text-[var(--fg-secondary)]"
+            className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--fg-secondary)]"
           >
             显示全部 ×
           </button>
@@ -292,7 +329,7 @@ export function EventDetailPage({
 
       {/* ==================== TAB 1: 记录 ==================== */}
       {tab === 'records' && (
-        <div className="flex flex-1 flex-col">
+        <main className="flex flex-1 flex-col">
           <section
             className="px-4 pb-2"
             onTouchStart={handleTouchStart}
@@ -303,7 +340,7 @@ export function EventDetailPage({
           >
             <div className="mb-2 flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
-                <span className="text-[15px] font-bold text-[var(--fg-primary)]">
+                <span className="text-[15px] font-medium text-[var(--fg-primary)]">
                   {formatMonthTitle(calYear, calMonth)}
                 </span>
                 {!isCurrentCalMonth && (
@@ -316,7 +353,7 @@ export function EventDetailPage({
                     }}
                     aria-label="回到本月"
                     title="回到本月"
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition active:scale-90"
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-medium transition active:scale-90"
                     style={{ backgroundColor: color.soft, color: color.ink }}
                   >
                     今
@@ -345,7 +382,7 @@ export function EventDetailPage({
 
             {!calendarCollapsed && (
               <>
-                <div className="grid grid-cols-7 text-center text-xs font-medium text-[var(--fg-muted)]">
+                <div className="grid grid-cols-7 text-center text-xs font-normal text-[var(--fg-muted)]">
                   {['周一', '周二', '周三', '周四', '周五', '周六', '周日'].map((w) => (
                     <div key={w} className="py-1.5">
                       {w}
@@ -389,12 +426,16 @@ export function EventDetailPage({
                           onClick={() =>
                             setSelectedDateKey(isSelected ? null : cell.dateKey)
                           }
-                          className="relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-semibold transition active:scale-90"
+                          className={`relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] transition active:scale-90 ${
+                            hasRecord || isSelected || cell.isToday
+                              ? 'font-medium'
+                              : 'font-normal'
+                          }`}
                           style={{ backgroundColor: bg, color: fg }}
                         >
                           {cell.isToday ? '今' : cell.dayNum}
                           {count > 1 && (
-                            <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[var(--pill-active-bg)] px-0.5 text-[9px] font-bold text-[var(--pill-active-fg)] ring-1 ring-[var(--bg-canvas)]">
+                            <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[var(--pill-active-bg)] px-0.5 text-[9px] font-medium text-[var(--pill-active-fg)] ring-1 ring-[var(--bg-canvas)]">
                               {count}
                             </span>
                           )}
@@ -416,11 +457,11 @@ export function EventDetailPage({
             </button>
           </section>
 
-          {/* Rounded Vertical Timeline Sheet */}
-          <section className="flex-1 rounded-t-[28px] bg-[var(--bg-surface)] px-4 pt-5 pb-10 shadow-[0_-2px_10px_rgba(15,23,42,0.04)]">
+          {/* Rounded Vertical Timeline Sheet with ONE continuous vertical rail tucked cleanly left */}
+          <section className="flex-1 rounded-t-[26px] bg-[var(--bg-surface)] pt-5 pr-4 pb-24 pl-2.5">
             {timelineGroups.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="text-sm font-medium text-[var(--fg-muted)]">
+                <p className="text-sm font-normal text-[var(--fg-muted)]">
                   {selectedDateKey
                     ? `${selectedDateKey} 还没有记录`
                     : '还没有任何记录'}
@@ -428,59 +469,85 @@ export function EventDetailPage({
                 <button
                   type="button"
                   onClick={handleFabClick}
-                  className="mt-3 rounded-full px-4 py-1.5 text-xs font-semibold text-white"
+                  className="mt-3 rounded-full px-4 py-1.5 text-xs font-medium text-white"
                   style={{ backgroundColor: color.solid }}
                 >
                   + 立即补记一条
                 </button>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="relative space-y-5">
+                {/* Single continuous hairline passing dead-center through every dot:
+                    w-8 (32px) + mr-2 (8px) + half of w-2.5 (5px) = 45px */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-2.5 bottom-5 left-[44.5px] w-[1px] bg-[var(--rail-color)]"
+                />
+
                 {timelineGroups.map((group) => (
-                  <div key={group.dateKey} className="relative">
-                    <div className="mb-2.5 flex items-center gap-3">
-                      <span className="w-10 shrink-0 text-right text-xs font-semibold text-[var(--fg-secondary)]">
+                  <div key={group.dateKey} className="space-y-3">
+                    <div className="flex items-center">
+                      <span className="mr-2 w-8 shrink-0 text-right text-xs font-normal text-[var(--fg-secondary)]">
                         {group.weekday}
                       </span>
                       <span
-                        className="relative z-10 h-2.5 w-2.5 shrink-0 rounded-full"
+                        className="relative z-10 mr-3 h-2.5 w-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: color.solid }}
                       />
-                      <span className="text-[13px] font-semibold text-[var(--fg-primary)]">
+                      <span className="text-[14px] font-normal text-[var(--fg-primary)]">
                         {group.title}
                       </span>
                     </div>
 
-                    <div className="relative space-y-2.5">
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute top-0 bottom-0 left-[56px] w-[1.5px] bg-[var(--rail-color)]"
-                      />
-                      {group.items.map((rec) => (
-                        <div key={rec.id} className="flex items-start gap-3">
-                          <span
-                            className="w-10 shrink-0 pt-3 text-right text-[11px] font-semibold tabular-nums"
-                            style={{ color: color.ink }}
-                          >
-                            {formatTime(rec.timestamp)}
-                          </span>
+                    <div className="space-y-2.5">
+                      {group.items.map((rec) => {
+                        const timeLabel =
+                          timeDisplayMode === 'interval'
+                            ? intervalByRecordId.get(rec.id) ?? '-'
+                            : formatTime(rec.timestamp);
 
-                          <div className="relative z-10 flex w-2.5 shrink-0 justify-center pt-3.5">
-                            <span
-                              className="h-2.5 w-2.5 rounded-full border-2 bg-[var(--bg-surface)]"
-                              style={{ borderColor: color.solid }}
-                            />
+                        return (
+                          <div key={rec.id} className="flex items-start">
+                            <button
+                              type="button"
+                              onClick={toggleTimeDisplayMode}
+                              title={
+                                timeDisplayMode === 'clock'
+                                  ? '点击切换为时间间隔'
+                                  : '点击切换回具体时间'
+                              }
+                              aria-label={
+                                timeDisplayMode === 'clock'
+                                  ? `时间 ${timeLabel}，点击切换为间隔显示`
+                                  : `距上次间隔 ${timeLabel}，点击切换回时间点`
+                              }
+                              className="mr-2 w-8 shrink-0 pt-3 text-right text-[11px] font-normal tabular-nums transition opacity-90 hover:opacity-100 active:scale-95"
+                              style={{ color: color.ink }}
+                            >
+                              {timeLabel}
+                            </button>
+
+                            <div className="relative z-10 mr-3 flex w-2.5 shrink-0 justify-center pt-3.5">
+                              <span
+                                className="h-2.5 w-2.5 rounded-full border-[1.75px] bg-[var(--bg-surface)]"
+                                style={{ borderColor: color.solid }}
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => onEditRecord(event, rec)}
+                              className="flex-1 rounded-[16px] bg-[var(--bg-canvas)] px-4 py-3 text-left transition hover:bg-[var(--bg-subtle)] active:scale-[0.99]"
+                            >
+                              <RecordValueChips
+                                event={event}
+                                record={rec}
+                                isDark={isDark}
+                              />
+                            </button>
                           </div>
-
-                          <button
-                            type="button"
-                            onClick={() => onEditRecord(event, rec)}
-                            className="flex-1 rounded-[16px] bg-[var(--bg-canvas)] px-3.5 py-2.5 text-left transition hover:bg-[var(--bg-subtle)] active:scale-[0.99]"
-                          >
-                            <RecordValueChips event={event} record={rec} isDark={isDark} />
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -488,21 +555,24 @@ export function EventDetailPage({
             )}
           </section>
 
-          <button
-            type="button"
-            onClick={handleFabClick}
-            aria-label="新增记录"
-            className="fixed right-5 bottom-6 z-30 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition active:scale-90 sm:right-[max(1.5rem,calc(50%-200px))]"
-            style={{ backgroundColor: color.solid }}
-          >
-            <Plus className="h-7 w-7 stroke-[2.4]" />
-          </button>
-        </div>
+          {/* Properly anchored FAB container — always 20px inside the 460px app frame */}
+          <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 mx-auto flex max-w-[460px] justify-end px-5">
+            <button
+              type="button"
+              onClick={handleFabClick}
+              aria-label="新增记录"
+              className="pointer-events-auto flex h-13 w-13 items-center justify-center rounded-full text-white shadow-md transition active:scale-90"
+              style={{ backgroundColor: color.solid }}
+            >
+              <Plus className="h-6 w-6 stroke-[2.2]" />
+            </button>
+          </div>
+        </main>
       )}
 
       {/* ==================== TAB 2: 统计 ==================== */}
       {tab === 'stats' && (
-        <div className="space-y-3.5 px-4 pt-1 pb-6">
+        <main className="space-y-3.5 px-4 pt-1 pb-6">
           <div className="grid grid-cols-4 rounded-xl bg-[var(--bg-subtle)] p-1">
             {(
               [
@@ -757,7 +827,7 @@ export function EventDetailPage({
               </div>
             );
           })}
-        </div>
+        </main>
       )}
     </div>
   );

@@ -16,7 +16,7 @@ export function RecordValueChips({
   compact,
 }: RecordValueChipsProps) {
   const color = getColorToken(event.color, isDark);
-  const chips: { key: string; label: string; bg: string; fg: string }[] = [];
+  const rows: { key: string; label: string; value: string; isPrimary?: boolean }[] = [];
 
   for (const field of event.fields) {
     const val = record.values[field.id];
@@ -25,62 +25,85 @@ export function RecordValueChips({
     }
 
     if (field.type === 'number' && typeof val === 'number') {
-      chips.push({
+      rows.push({
         key: field.id,
-        label: `${formatCleanNumber(val)}${field.unit ? ` ${field.unit}` : ''}`,
-        bg: color.soft,
-        fg: color.ink,
+        label: field.name,
+        value: `${formatCleanNumber(val)}${field.unit ? ` ${field.unit}` : ''}`,
+        isPrimary: true,
       });
     } else if (field.type === 'select') {
       const ids = Array.isArray(val) ? val : [String(val)];
-      for (const id of ids) {
-        const opt = field.options.find((o) => o.id === id);
-        if (opt) {
-          chips.push({
-            key: `${field.id}_${id}`,
-            label: opt.label,
-            bg: 'var(--bg-subtle)',
-            fg: 'var(--fg-secondary)',
-          });
-        }
+      const labels = ids
+        .map((id) => field.options.find((o) => o.id === id)?.label)
+        .filter((s): s is string => Boolean(s));
+      if (labels.length > 0) {
+        rows.push({
+          key: field.id,
+          label: field.name,
+          value: labels.join('、'),
+        });
       }
     } else if (field.type === 'text' && typeof val === 'string') {
-      chips.push({
+      rows.push({
         key: field.id,
-        label: val,
-        bg: 'var(--bg-subtle)',
-        fg: 'var(--fg-secondary)',
+        label: field.name,
+        value: val,
       });
     }
   }
 
-  const hasContent = chips.length > 0 || Boolean(record.note);
+  const hasContent = rows.length > 0 || Boolean(record.note);
 
   if (!hasContent) {
     return (
-      <span className="text-sm text-[var(--fg-secondary)]">
+      <span className="text-[13.5px] font-normal text-[var(--fg-secondary)]">
         {compact ? '已完成' : '记录一次'}
       </span>
     );
   }
 
+  if (compact) {
+    return (
+      <div className="space-y-1">
+        {rows.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[13px]">
+            {rows.map((r) => (
+              <span key={r.key} className="inline-flex items-baseline gap-1">
+                <span
+                  className={r.isPrimary ? 'font-medium' : 'font-normal text-[var(--fg-secondary)]'}
+                  style={r.isPrimary ? { color: color.ink } : undefined}
+                >
+                  {r.value}
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
+        {record.note && (
+          <p className="text-xs leading-relaxed text-[var(--fg-muted)]">{record.note}</p>
+        )}
+      </div>
+    );
+  }
+
+  // Calm MarkTimes-style key-value lines inside the timeline record card
   return (
     <div className="space-y-1.5">
-      {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {chips.map((c) => (
-            <span
-              key={c.key}
-              className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: c.bg, color: c.fg }}
+      {rows.length > 0 && (
+        <div className="space-y-1">
+          {rows.map((r) => (
+            <div
+              key={r.key}
+              className="flex items-baseline gap-3 text-[13.5px] leading-snug"
             >
-              {c.label}
-            </span>
+              <span className="shrink-0 text-[var(--fg-muted)]">{r.label}</span>
+              <span className="text-[var(--fg-primary)]">{r.value}</span>
+            </div>
           ))}
         </div>
       )}
       {record.note && (
-        <p className="text-[13px] leading-relaxed text-[var(--fg-secondary)]">
+        <p className="text-[13px] leading-relaxed text-[var(--fg-muted)]">
           {record.note}
         </p>
       )}

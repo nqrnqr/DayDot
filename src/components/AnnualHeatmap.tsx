@@ -170,6 +170,7 @@ export function AnnualHeatmap({
                           onSelectDate(day.dateKey);
                         }
                       }}
+                      aria-label={`${day.dateKey}: ${stat?.count ?? 0} 次`}
                       title={`${day.dateKey}: ${stat?.count ?? 0} 次`}
                       className={`flex h-[18px] w-[18px] items-center justify-center rounded-[5px] text-[9px] font-semibold transition-transform active:scale-90 ${
                         day.isFuture && val === 0 ? 'opacity-45' : ''

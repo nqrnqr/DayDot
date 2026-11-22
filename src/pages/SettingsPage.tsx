@@ -105,7 +105,7 @@ export function SettingsPage({
   return (
     <div className="flex flex-col pb-24">
       <header className="sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pt-5 pb-3 backdrop-blur-md">
-        <h1 className="text-[22px] font-bold tracking-tight text-[var(--fg-primary)]">
+        <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)]">
           设置
         </h1>
       </header>
@@ -121,10 +121,10 @@ export function SettingsPage({
               <ShieldCheck className="h-5.5 w-5.5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[var(--fg-primary)]">
+              <h2 className="text-sm font-medium text-[var(--fg-primary)]">
                 纯本地离线存储
               </h2>
-              <p className="mt-0.5 text-xs font-medium text-[var(--fg-muted)]">
+              <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
                 当前已保存 {eventCount} 个事件 · {recordCount} 条记录，数据完全留在你的设备
               </p>
             </div>
@@ -134,7 +134,7 @@ export function SettingsPage({
         {/* Appearance / Dark Mode Toggle */}
         <section className="daydot-card space-y-3 rounded-[22px] bg-[var(--bg-surface)] p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-bold text-[var(--fg-primary)]">
+            <div className="flex items-center gap-2 text-sm font-medium text-[var(--fg-primary)]">
               <Palette className="h-4 w-4 text-[var(--fg-muted)]" />
               外观主题
             </div>
@@ -188,11 +188,11 @@ export function SettingsPage({
             onClick={onManageGroups}
             className="flex w-full items-center justify-between px-4 py-4 text-left transition hover:bg-[var(--bg-canvas)] active:scale-[0.99]"
           >
-            <div className="flex items-center gap-2.5 text-sm font-bold text-[var(--fg-primary)]">
+            <div className="flex items-center gap-2.5 text-sm font-medium text-[var(--fg-primary)]">
               <FolderCog className="h-4 w-4 text-[var(--fg-muted)]" />
               分组管理
             </div>
-            <div className="flex items-center gap-1 text-xs font-medium text-[var(--fg-muted)]">
+            <div className="flex items-center gap-1 text-xs text-[var(--fg-muted)]">
               <span>{groupCount} 个分组</span>
               <ChevronRight className="h-4 w-4" />
             </div>
@@ -201,7 +201,7 @@ export function SettingsPage({
 
         {/* Backup & Restore */}
         <section className="daydot-card space-y-3 rounded-[22px] bg-[var(--bg-surface)] p-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-[var(--fg-primary)]">
+          <div className="flex items-center gap-2 text-sm font-medium text-[var(--fg-primary)]">
             <Database className="h-4 w-4 text-[var(--fg-muted)]" />
             数据备份与恢复（JSON）
           </div>
@@ -273,7 +273,7 @@ export function SettingsPage({
               <Smartphone className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-sm font-bold text-[var(--fg-primary)]">
+              <h2 className="text-sm font-medium text-[var(--fg-primary)]">
                 安装到 Android 桌面
               </h2>
               <p className="text-xs leading-relaxed text-[var(--fg-muted)]">

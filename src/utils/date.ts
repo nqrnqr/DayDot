@@ -32,6 +32,18 @@ export function formatTime(ts: number): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+/** Compact interval label matching MarkTimes (e.g. <1m, 45m, 23h, 1d, 69d) */
+export function formatCompactInterval(diffMs: number): string {
+  if (diffMs < 0) return '-';
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins < 1) return '<1m';
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `${days}d`;
+}
+
 export function formatFullDate(ts: number | Date): string {
   const d = new Date(ts);
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;

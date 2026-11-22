@@ -164,9 +164,20 @@ export function App() {
     ensureSeeded().then(() => setReady(true));
   }, []);
 
-  // Sync Android system status/navigation bar icon colors with Light & Dark themes
+  // Sync Android system status/navigation bar background & icon colors with Light & Dark themes
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
+    const nativeBridge = (
+      window as unknown as {
+        DayDotNative?: {
+          setSystemBarTheme?: (dark: boolean, bgHex: string) => void;
+        };
+      }
+    ).DayDotNative;
+    if (nativeBridge?.setSystemBarTheme) {
+      nativeBridge.setSystemBarTheme(isDark, isDark ? '#111216' : '#F7F7F8');
+      return;
+    }
     void SystemBars.setStyle({
       style: isDark ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
     }).catch(() => {

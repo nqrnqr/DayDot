@@ -74,6 +74,8 @@ export function SettingsPage({
   const [appVersion, setAppVersion] = useState<string>(BUILTIN_APP_VERSION);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [applyingUpdate, setApplyingUpdate] = useState(false);
+  const [downloadPercent, setDownloadPercent] = useState<number | null>(null);
+  const [otaError, setOtaError] = useState<string | null>(null);
   const [pendingOta, setPendingOta] = useState<OtaManifest | null>(null);
 
   useEffect(() => {
@@ -85,6 +87,7 @@ export function SettingsPage({
   const handleCheckOta = async () => {
     if (checkingUpdate || applyingUpdate) return;
     setCheckingUpdate(true);
+    setOtaError(null);
     try {
       const result = await checkForOtaUpdate();
       setAppVersion(result.currentVersion);
@@ -96,7 +99,9 @@ export function SettingsPage({
         onNotify(`已是最新版本 (v${result.currentVersion})`);
       }
     } catch (err) {
-      onNotify(err instanceof Error ? err.message : '检查更新失败');
+      const msg = err instanceof Error ? err.message : '检查更新失败';
+      setOtaError(msg);
+      onNotify(msg);
     } finally {
       setCheckingUpdate(false);
     }
@@ -105,12 +110,17 @@ export function SettingsPage({
   const handleApplyOta = async () => {
     if (!pendingOta || applyingUpdate) return;
     setApplyingUpdate(true);
+    setDownloadPercent(0);
+    setOtaError(null);
     try {
       onNotify(`正在下载 v${pendingOta.version}...`);
-      await downloadAndApplyOta(pendingOta);
+      await downloadAndApplyOta(pendingOta, (pct) => setDownloadPercent(pct));
     } catch (err) {
       setApplyingUpdate(false);
-      onNotify(err instanceof Error ? err.message : '热更新下载失败');
+      setDownloadPercent(null);
+      const msg = err instanceof Error ? err.message : '热更新下载失败';
+      setOtaError(msg);
+      onNotify(msg);
     }
   };
 
@@ -294,40 +304,52 @@ export function SettingsPage({
 
           {/* Native Android OTA Hot Update Row (only shown inside Android APK) */}
           {nativeAndroid && (
-            <div className="flex items-center justify-between border-t border-[var(--border-soft)] px-4 py-3.5">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <ArrowDownToLine className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-[var(--fg-primary)]">
-                    应用热更新
-                  </div>
-                  <div className="truncate text-[11px] text-[var(--fg-muted)]">
-                    {pendingOta
-                      ? `发现新版 v${pendingOta.version}，无需重装 APK`
-                      : `当前版本 v${appVersion}`}
+            <div className="border-t border-[var(--border-soft)] px-4 py-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <ArrowDownToLine className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-[var(--fg-primary)]">
+                      应用热更新
+                    </div>
+                    <div className="truncate text-[11px] text-[var(--fg-muted)]">
+                      {pendingOta
+                        ? `发现新版 v${pendingOta.version}，无需重装 APK`
+                        : `当前版本 v${appVersion}`}
+                    </div>
                   </div>
                 </div>
+
+                {pendingOta ? (
+                  <button
+                    type="button"
+                    disabled={applyingUpdate}
+                    onClick={handleApplyOta}
+                    className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-white tabular-nums transition active:scale-95 disabled:opacity-60"
+                    style={{ backgroundColor: emerald.solid }}
+                  >
+                    {applyingUpdate
+                      ? downloadPercent !== null && downloadPercent > 0
+                        ? `下载中 ${downloadPercent}%`
+                        : '更新中...'
+                      : '立即更新'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={checkingUpdate}
+                    onClick={handleCheckOta}
+                    className="shrink-0 rounded-full bg-[var(--bg-subtle)] px-3 py-1.5 text-xs font-medium text-[var(--fg-primary)] transition active:scale-95 disabled:opacity-60"
+                  >
+                    {checkingUpdate ? '检查中...' : '检查更新'}
+                  </button>
+                )}
               </div>
 
-              {pendingOta ? (
-                <button
-                  type="button"
-                  disabled={applyingUpdate}
-                  onClick={handleApplyOta}
-                  className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-white transition active:scale-95 disabled:opacity-60"
-                  style={{ backgroundColor: emerald.solid }}
-                >
-                  {applyingUpdate ? '更新中...' : '立即更新'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={checkingUpdate}
-                  onClick={handleCheckOta}
-                  className="shrink-0 rounded-full bg-[var(--bg-subtle)] px-3 py-1.5 text-xs font-medium text-[var(--fg-primary)] transition active:scale-95 disabled:opacity-60"
-                >
-                  {checkingUpdate ? '检查中...' : '检查更新'}
-                </button>
+              {otaError && (
+                <p className="mt-2 break-all rounded-xl bg-red-500/8 px-3 py-2 text-[11px] leading-relaxed text-red-500">
+                  {otaError}
+                </p>
               )}
             </div>
           )}

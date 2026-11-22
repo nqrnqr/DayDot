@@ -87,17 +87,74 @@ export async function checkForOtaUpdate(): Promise<OtaCheckResult> {
   };
 }
 
-export async function downloadAndApplyOta(manifest: OtaManifest): Promise<void> {
+export async function downloadAndApplyOta(
+  manifest: OtaManifest,
+  onProgress?: (percent: number) => void,
+): Promise<void> {
   if (!isNativeAndroid()) {
     throw new Error('仅 Android 客户端支持应用内热更新');
   }
   if (!manifest.checksum) {
     throw new Error('远端更新包缺少 SHA-256 校验值，请稍后重试');
   }
-  const bundle = await CapacitorUpdater.download({
-    url: manifest.url,
-    version: manifest.version,
-    checksum: manifest.checksum,
-  });
-  await CapacitorUpdater.set(bundle);
+
+  let nativeFailReason = '';
+  const capturedLogs: string[] = [];
+  const origConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    try {
+      const text = args.map((a) => String(a)).join(' ');
+      if (text.includes('[CapgoUpdater]')) {
+        capturedLogs.push(text.replace(/^\[CapgoUpdater\]\s*🔴?\s*/u, '').trim());
+      }
+    } catch {
+      // Ignore capture errors
+    }
+    origConsoleError.apply(console, args);
+  };
+
+  const progressHandle = await CapacitorUpdater.addListener(
+    'download',
+    (info) => {
+      if (typeof info?.percent === 'number') {
+        onProgress?.(Math.max(0, Math.min(100, Math.round(info.percent))));
+      }
+    },
+  );
+  const failedHandle = await CapacitorUpdater.addListener(
+    'downloadFailed',
+    (info) => {
+      const raw = (info as unknown as { error?: string })?.error;
+      if (raw && !nativeFailReason) {
+        nativeFailReason = raw;
+      }
+    },
+  );
+
+  try {
+    const bundle = await CapacitorUpdater.download({
+      url: manifest.url,
+      version: manifest.version,
+      checksum: manifest.checksum,
+    });
+    onProgress?.(100);
+    await CapacitorUpdater.set(bundle);
+  } catch (err) {
+    const baseMsg = err instanceof Error ? err.message : String(err);
+    const detail =
+      nativeFailReason ||
+      capturedLogs.find(
+        (line) => !line.startsWith('Failed to download from:'),
+      ) ||
+      capturedLogs[0] ||
+      '';
+    if (detail && !baseMsg.includes(detail)) {
+      throw new Error(`更新下载失败：${detail}`);
+    }
+    throw new Error(baseMsg || '更新下载失败');
+  } finally {
+    console.error = origConsoleError;
+    await progressHandle.remove().catch(() => {});
+    await failedHandle.remove().catch(() => {});
+  }
 }

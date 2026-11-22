@@ -9,6 +9,10 @@ const config: CapacitorConfig = {
     backgroundColor: '#F7F7F8',
   },
   plugins: {
+    SystemBars: {
+      // Handled natively in MainActivity via WindowInsetsCompat on android.R.id.content
+      insetsHandling: 'disable',
+    },
     CapacitorUpdater: {
       // Self-hosted manual OTA via GitHub Pages (no third-party cloud calls)
       autoUpdate: false,

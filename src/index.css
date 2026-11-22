@@ -174,9 +174,26 @@ dialog.daydot-dialog::backdrop {
   appearance: textfield;
 }
 
-/* Safe area padding for mobile bottom nav & sheets */
+/* Safe area padding for Android edge-to-edge status/nav bars & mobile sheets
+   Supports both Capacitor 8 injected --safe-area-inset-* vars and browser env() */
+.pt-safe {
+  padding-top: calc(
+    1.25rem + max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px))
+  );
+}
+
+.pt-safe-sm {
+  padding-top: calc(
+    0.75rem + max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px))
+  );
+}
+
 .pb-safe {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-bottom: max(
+    0.75rem,
+    var(--safe-area-inset-bottom, 0px),
+    env(safe-area-inset-bottom, 0px)
+  );
 }
 
 @keyframes slideUpSheet {

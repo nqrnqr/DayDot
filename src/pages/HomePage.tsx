@@ -310,7 +310,7 @@ export function HomePage({
 
   return (
     <div className="flex flex-col pb-24">
-      <header className="sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pt-5 pb-3 backdrop-blur-md">
+      <header className="pt-safe sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pb-3 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <h1 className="text-[26px] font-extrabold tracking-tight text-[var(--fg-primary)] italic">

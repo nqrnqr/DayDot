@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { BarChart3, CalendarDays, Home, Settings, Undo2 } from 'lucide-react';
@@ -163,6 +163,16 @@ export function App() {
     void initNativeUpdater();
     ensureSeeded().then(() => setReady(true));
   }, []);
+
+  // Sync Android system status/navigation bar icon colors with Light & Dark themes
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    void SystemBars.setStyle({
+      style: isDark ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+    }).catch(() => {
+      // Non-fatal
+    });
+  }, [isDark]);
 
   // Native Android hardware back button handling when packaged via Capacitor APK
   useEffect(() => {

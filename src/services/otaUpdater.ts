@@ -5,6 +5,7 @@ export interface OtaManifest {
   version: string;
   commit?: string;
   url: string;
+  checksum?: string;
   updatedAt?: string;
 }
 
@@ -90,9 +91,13 @@ export async function downloadAndApplyOta(manifest: OtaManifest): Promise<void> 
   if (!isNativeAndroid()) {
     throw new Error('仅 Android 客户端支持应用内热更新');
   }
+  if (!manifest.checksum) {
+    throw new Error('远端更新包缺少 SHA-256 校验值，请稍后重试');
+  }
   const bundle = await CapacitorUpdater.download({
     url: manifest.url,
     version: manifest.version,
+    checksum: manifest.checksum,
   });
   await CapacitorUpdater.set(bundle);
 }

@@ -244,7 +244,7 @@ export function EventDetailPage({
   return (
     <div className="flex min-h-dvh flex-col bg-[var(--bg-canvas)] pb-24">
       {/* Clean balanced Header: Back | Segmented Tabs | Edit (delete safely inside Edit sheet) */}
-      <header className="sticky top-0 z-20 flex items-center justify-between bg-[var(--bg-canvas-blur)] px-4 py-3 backdrop-blur-md">
+      <header className="pt-safe-sm sticky top-0 z-20 flex items-center justify-between bg-[var(--bg-canvas-blur)] px-4 pb-3 backdrop-blur-md">
         <button
           type="button"
           onClick={onBack}

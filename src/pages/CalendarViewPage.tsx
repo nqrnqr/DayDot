@@ -124,7 +124,7 @@ export function CalendarViewPage({
 
   return (
     <div className="flex min-h-dvh flex-col pb-24">
-      <header className="sticky top-0 z-20 flex items-center justify-between bg-[var(--bg-canvas-blur)] px-5 pt-5 pb-3 backdrop-blur-md">
+      <header className="pt-safe sticky top-0 z-20 flex items-center justify-between bg-[var(--bg-canvas-blur)] px-5 pb-3 backdrop-blur-md">
         <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)]">
           查看
         </h1>

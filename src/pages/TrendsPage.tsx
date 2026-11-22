@@ -474,7 +474,7 @@ export function TrendsPage({
 
   return (
     <div className="flex flex-col pb-24">
-      <header className="sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pt-5 pb-2.5 backdrop-blur-md">
+      <header className="pt-safe sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pb-2.5 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)]">

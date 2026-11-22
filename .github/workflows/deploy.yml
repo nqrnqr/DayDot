@@ -57,11 +57,13 @@ jobs:
           npx vite build --outDir dist-ota
           mkdir -p dist/ota
           (cd dist-ota && zip -rq ../dist/ota/bundle.zip .)
+          CHECKSUM="$(sha256sum dist/ota/bundle.zip | awk '{print $1}')"
           cat <<EOF > dist/ota/latest.json
           {
             "version": "${{ steps.meta.outputs.version }}",
             "commit": "${{ steps.meta.outputs.short_sha }}",
             "url": "${{ steps.meta.outputs.ota_zip }}",
+            "checksum": "${CHECKSUM}",
             "updatedAt": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           }
           EOF

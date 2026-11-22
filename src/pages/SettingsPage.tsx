@@ -168,7 +168,7 @@ export function SettingsPage({
 
   return (
     <div className="flex flex-col pb-24">
-      <header className="sticky top-0 z-20 flex items-baseline justify-between bg-[var(--bg-canvas-blur)] px-5 pt-5 pb-3 backdrop-blur-md">
+      <header className="pt-safe sticky top-0 z-20 flex items-baseline justify-between bg-[var(--bg-canvas-blur)] px-5 pb-3 backdrop-blur-md">
         <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)]">
           设置
         </h1>

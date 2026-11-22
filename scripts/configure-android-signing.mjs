@@ -4,8 +4,8 @@ import path from 'node:path';
 /**
  * Patches android/app/build.gradle during CI:
  * 1. Sets monotonically increasing versionCode & versionName from env.
- * 2. When signing env vars are present, injects release signingConfig so every
- *    APK shares the exact same permanent signature (enabling lossless in-place upgrades).
+ * 2. When signing env vars & release.keystore are present, injects release
+ *    signingConfig cleanly into buildTypes.release.
  */
 const gradlePath = path.join(process.cwd(), 'android', 'app', 'build.gradle');
 if (!fs.existsSync(gradlePath)) {
@@ -28,8 +28,7 @@ const hasSigning =
   fs.existsSync(path.join(process.cwd(), 'android', 'app', 'release.keystore'));
 
 if (hasSigning && !gradle.includes('signingConfigs {')) {
-  const signingBlock = `
-    signingConfigs {
+  const replacement = `signingConfigs {
         release {
             storeFile file("release.keystore")
             storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
@@ -37,13 +36,16 @@ if (hasSigning && !gradle.includes('signingConfigs {')) {
             keyPassword System.getenv("ANDROID_KEY_PASSWORD")
         }
     }
-    buildTypes {`;
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release`;
 
-  gradle = gradle.replace(/buildTypes\s*\{/, signingBlock.trimStart());
-  gradle = gradle.replace(
-    /(release\s*\{)/,
-    `$1\n            signingConfig signingConfigs.release`,
-  );
+  const matched = /buildTypes\s*\{\s*release\s*\{/.test(gradle);
+  if (!matched) {
+    console.error('Could not find buildTypes { release { block in build.gradle');
+    process.exit(1);
+  }
+  gradle = gradle.replace(/buildTypes\s*\{\s*release\s*\{/, replacement);
   console.log(
     `Configured permanent release signing + version ${versionName} (${versionCode}).`,
   );

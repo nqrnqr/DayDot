@@ -16,6 +16,7 @@ import {
 import {
   loadSyncConfig,
   loadSyncMeta,
+  markSyncPending,
   syncWithGitHub,
   type GitHubSyncConfig,
   type SyncStatusMeta,
@@ -236,18 +237,33 @@ export function App() {
     setActiveTab,
   ]);
 
+  const SYNC_DEBOUNCE_MS = 30_000;
+  const FOREGROUND_PULL_COOLDOWN_MS = 2 * 60_000;
+
   const runSync = useCallback(
     async (silent: boolean, overrideConfig?: GitHubSyncConfig) => {
       const cfg = overrideConfig ?? syncConfig;
       if (!cfg) return;
+      if (autoSyncTimerRef.current) {
+        window.clearTimeout(autoSyncTimerRef.current);
+        autoSyncTimerRef.current = null;
+      }
       setSyncing(true);
       try {
         const res = await syncWithGitHub(cfg);
-        setSyncMeta(loadSyncMeta());
+        const latest = loadSyncMeta();
+        setSyncMeta(latest);
         if (!silent) {
           showToast(res.summary);
         } else if (res.pulledCount > 0) {
           showToast(`云端已同步 ${res.pulledCount} 项更新`);
+        }
+        // If another local edit occurred while this sync was in-flight, schedule a follow-up batch
+        if (latest.pendingChanges && cfg.autoSync && navigator.onLine) {
+          autoSyncTimerRef.current = window.setTimeout(() => {
+            autoSyncTimerRef.current = null;
+            void runSync(true);
+          }, SYNC_DEBOUNCE_MS);
         }
       } catch (err) {
         setSyncMeta(loadSyncMeta());
@@ -261,7 +277,27 @@ export function App() {
     [syncConfig, showToast],
   );
 
-  // Silent auto-sync on app startup when enabled
+  const flushPendingSync = useCallback(() => {
+    if (!syncConfig?.autoSync || !navigator.onLine) return;
+    const latest = loadSyncMeta();
+    if (!latest.pendingChanges) return;
+    void runSync(true);
+  }, [syncConfig, runSync]);
+
+  const handleForegroundResume = useCallback(() => {
+    if (!syncConfig?.autoSync || !navigator.onLine) return;
+    const latest = loadSyncMeta();
+    if (latest.pendingChanges) {
+      void runSync(true);
+      return;
+    }
+    const elapsed = Date.now() - (latest.lastSyncedAt ?? 0);
+    if (elapsed >= FOREGROUND_PULL_COOLDOWN_MS) {
+      void runSync(true);
+    }
+  }, [syncConfig, runSync]);
+
+  // Silent auto-sync on app startup when enabled (also flushes any pending changes left from offline/force-kill)
   const initialSyncDoneRef = useRef(false);
   useEffect(() => {
     if (!ready || initialSyncDoneRef.current) return;
@@ -271,22 +307,73 @@ export function App() {
     }
   }, [ready, syncConfig, runSync]);
 
-  // Debounced silent auto-sync after any local mutation
+  // Track pending local mutations + 30s batch debounce when auto-sync is enabled
   useEffect(() => {
-    if (!syncConfig?.autoSync) return;
     const handleLocalChange = () => {
-      if (!navigator.onLine) return;
+      if (!syncConfig) return;
+      setSyncMeta(markSyncPending());
+      if (!syncConfig.autoSync || !navigator.onLine) return;
       if (autoSyncTimerRef.current) window.clearTimeout(autoSyncTimerRef.current);
       autoSyncTimerRef.current = window.setTimeout(() => {
+        autoSyncTimerRef.current = null;
         void runSync(true);
-      }, 4000);
+      }, SYNC_DEBOUNCE_MS);
     };
     window.addEventListener('daydot-local-change', handleLocalChange);
     return () => {
       window.removeEventListener('daydot-local-change', handleLocalChange);
-      if (autoSyncTimerRef.current) window.clearTimeout(autoSyncTimerRef.current);
+      if (autoSyncTimerRef.current) {
+        window.clearTimeout(autoSyncTimerRef.current);
+        autoSyncTimerRef.current = null;
+      }
     };
   }, [syncConfig, runSync]);
+
+  // Flush pending changes immediately on background / lock / tab switch / network reconnect,
+  // and pull silently on foreground return after cooldown
+  useEffect(() => {
+    if (!syncConfig?.autoSync) return;
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingSync();
+      } else if (document.visibilityState === 'visible') {
+        handleForegroundResume();
+      }
+    };
+    const onPageHide = () => {
+      flushPendingSync();
+    };
+    const onOnline = () => {
+      flushPendingSync();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('online', onOnline);
+
+    let removeAppStateListener: (() => void) | undefined;
+    if (Capacitor.isNativePlatform()) {
+      void CapApp.addListener('appStateChange', ({ isActive }) => {
+        if (!isActive) {
+          flushPendingSync();
+        } else {
+          handleForegroundResume();
+        }
+      }).then((handle) => {
+        removeAppStateListener = () => {
+          void handle.remove();
+        };
+      });
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('online', onOnline);
+      removeAppStateListener?.();
+    };
+  }, [syncConfig, flushPendingSync, handleForegroundResume]);
 
   // Filter out soft-deleted tombstones from UI queries
   const groups = useLiveQuery(

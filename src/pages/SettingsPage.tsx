@@ -172,9 +172,11 @@ export function SettingsPage({
       ? '同步中...'
       : syncMeta.lastError
         ? '同步失败'
-        : syncMeta.lastSyncedAt
-          ? `已同步 · ${formatRelativeSince(syncMeta.lastSyncedAt)}`
-          : '待首次同步';
+        : syncMeta.pendingChanges
+          ? '待同步'
+          : syncMeta.lastSyncedAt
+            ? `已同步 · ${formatRelativeSince(syncMeta.lastSyncedAt)}`
+            : '待首次同步';
 
   return (
     <div className="flex flex-col pb-24">

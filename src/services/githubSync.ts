@@ -13,6 +13,8 @@ export interface GitHubSyncConfig {
 export interface SyncStatusMeta {
   lastSyncedAt: number | null;
   lastError: string | null;
+  pendingChanges: boolean;
+  lastMutationAt: number | null;
 }
 
 interface SyncEntity {
@@ -92,14 +94,30 @@ export function saveSyncConfig(config: GitHubSyncConfig | null): void {
 export function loadSyncMeta(): SyncStatusMeta {
   try {
     const raw = localStorage.getItem(META_KEY);
-    if (!raw) return { lastSyncedAt: null, lastError: null };
+    if (!raw) {
+      return {
+        lastSyncedAt: null,
+        lastError: null,
+        pendingChanges: false,
+        lastMutationAt: null,
+      };
+    }
     const parsed = JSON.parse(raw) as Partial<SyncStatusMeta>;
     return {
-      lastSyncedAt: typeof parsed.lastSyncedAt === 'number' ? parsed.lastSyncedAt : null,
+      lastSyncedAt:
+        typeof parsed.lastSyncedAt === 'number' ? parsed.lastSyncedAt : null,
       lastError: typeof parsed.lastError === 'string' ? parsed.lastError : null,
+      pendingChanges: Boolean(parsed.pendingChanges),
+      lastMutationAt:
+        typeof parsed.lastMutationAt === 'number' ? parsed.lastMutationAt : null,
     };
   } catch {
-    return { lastSyncedAt: null, lastError: null };
+    return {
+      lastSyncedAt: null,
+      lastError: null,
+      pendingChanges: false,
+      lastMutationAt: null,
+    };
   }
 }
 
@@ -109,6 +127,17 @@ export function saveSyncMeta(meta: SyncStatusMeta): void {
   } catch {
     // Ignore
   }
+}
+
+export function markSyncPending(): SyncStatusMeta {
+  const prev = loadSyncMeta();
+  const next: SyncStatusMeta = {
+    ...prev,
+    pendingChanges: true,
+    lastMutationAt: Date.now(),
+  };
+  saveSyncMeta(next);
+  return next;
 }
 
 /** Parse either "owner/repo" or "https://github.com/owner/repo(.git)" */
@@ -357,6 +386,7 @@ export async function syncWithGitHub(config: GitHubSyncConfig): Promise<SyncResu
 
   const runner = (async (): Promise<SyncResult> => {
     for (let attempt = 0; attempt < 2; attempt++) {
+      const syncStartedAt = Date.now();
       const { sha, payload: remote } = await fetchRemoteSyncFile(config);
       const [localGroups, localEvents, localRecords] = await Promise.all([
         db.groups.toArray(),
@@ -442,7 +472,15 @@ export async function syncWithGitHub(config: GitHubSyncConfig): Promise<SyncResu
         }
       }
 
-      saveSyncMeta({ lastSyncedAt: now, lastError: null });
+      const latestMeta = loadSyncMeta();
+      const hasNewerLocalMutation =
+        latestMeta.lastMutationAt !== null && latestMeta.lastMutationAt > syncStartedAt;
+      saveSyncMeta({
+        lastSyncedAt: now,
+        lastError: null,
+        pendingChanges: hasNewerLocalMutation,
+        lastMutationAt: hasNewerLocalMutation ? latestMeta.lastMutationAt : null,
+      });
       const summary =
         pulledCount > 0 && needsPush
           ? `同步完成（拉取 ${pulledCount} 项并已上传）`
@@ -464,7 +502,10 @@ export async function syncWithGitHub(config: GitHubSyncConfig): Promise<SyncResu
   } catch (err) {
     const msg = err instanceof Error ? err.message : '同步失败';
     const prev = loadSyncMeta();
-    saveSyncMeta({ lastSyncedAt: prev.lastSyncedAt, lastError: msg });
+    saveSyncMeta({
+      ...prev,
+      lastError: msg,
+    });
     throw err;
   } finally {
     inFlightSync = null;

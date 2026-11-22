@@ -194,9 +194,13 @@ export function CloudSyncSheet({
                       ? '正在同步中...'
                       : meta.lastError
                         ? '上次同步失败'
-                        : meta.lastSyncedAt
-                          ? `上次同步：${formatRelativeSince(meta.lastSyncedAt)}`
-                          : '尚未执行首次同步'}
+                        : meta.pendingChanges
+                          ? config.autoSync
+                            ? '有未上传改动，切后台或稍后自动合并提交'
+                            : '有未上传改动，点击右侧立即同步'
+                          : meta.lastSyncedAt
+                            ? `上次同步：${formatRelativeSince(meta.lastSyncedAt)}`
+                            : '尚未执行首次同步'}
                   </div>
                 </div>
               </div>
@@ -226,7 +230,7 @@ export function CloudSyncSheet({
                   自动静默同步
                 </div>
                 <div className="text-[11px] text-[var(--fg-muted)]">
-                  打开应用与修改数据后自动后台合并
+                  连续改动 30 秒内合并提交，切后台或锁屏立即补推
                 </div>
               </div>
               <button

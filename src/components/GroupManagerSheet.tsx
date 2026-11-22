@@ -16,7 +16,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Check, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { EventItem, Group } from '../types/models';
-import { createId, db } from '../db/db';
+import { createId, db, notifyLocalMutation, softDeleteGroup } from '../db/db';
 import { BottomSheetDialog } from './BottomSheetDialog';
 
 interface GroupManagerSheetProps {
@@ -202,6 +202,7 @@ export function GroupManagerSheet({
       updatedAt: now,
       deletedAt: null,
     });
+    notifyLocalMutation();
     setNewName('');
     onNotify(`已新建分组「${trimmed}」`);
   };
@@ -217,6 +218,7 @@ export function GroupManagerSheet({
       name: trimmed,
       updatedAt: Date.now(),
     });
+    notifyLocalMutation();
     setEditingId(null);
     onNotify(`已重命名为「${trimmed}」`);
   };
@@ -226,10 +228,7 @@ export function GroupManagerSheet({
       setConfirmDeleteId(group.id);
       return;
     }
-    await db.transaction('rw', db.groups, db.events, async () => {
-      await db.events.where('groupId').equals(group.id).modify({ groupId: null });
-      await db.groups.delete(group.id);
-    });
+    await softDeleteGroup(group.id);
     setConfirmDeleteId(null);
     onNotify(`已删除分组「${group.name}」`);
   };
@@ -248,6 +247,7 @@ export function GroupManagerSheet({
         await db.groups.update(reordered[i].id, { order: i, updatedAt: now });
       }
     });
+    notifyLocalMutation();
   };
 
   return (

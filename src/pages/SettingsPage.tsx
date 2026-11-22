@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react';
 import {
   ChevronRight,
+  Cloud,
   Database,
   Download,
   FolderCog,
   Monitor,
   Moon,
   Palette,
+  RefreshCw,
   RotateCcw,
   ShieldCheck,
   Smartphone,
@@ -17,6 +19,8 @@ import {
 import type { BackupPayload } from '../types/models';
 import { getColorToken } from '../constants/theme';
 import type { ThemePreference } from '../utils/themeMode';
+import type { GitHubSyncConfig, SyncStatusMeta } from '../services/githubSync';
+import { formatRelativeSince } from '../utils/date';
 import {
   clearAllData,
   exportBackupJson,
@@ -31,8 +35,13 @@ interface SettingsPageProps {
   isDark: boolean;
   themePreference: ThemePreference;
   systemDark: boolean;
+  syncConfig: GitHubSyncConfig | null;
+  syncMeta: SyncStatusMeta;
+  syncing: boolean;
   onChangeTheme: (pref: ThemePreference) => void;
   onManageGroups: () => void;
+  onOpenCloudSync: () => void;
+  onSyncNow: () => void;
   onNotify: (msg: string) => void;
 }
 
@@ -43,8 +52,13 @@ export function SettingsPage({
   isDark,
   themePreference,
   systemDark,
+  syncConfig,
+  syncMeta,
+  syncing,
   onChangeTheme,
   onManageGroups,
+  onOpenCloudSync,
+  onSyncNow,
   onNotify,
 }: SettingsPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -181,12 +195,62 @@ export function SettingsPage({
           </div>
         </section>
 
-        {/* Clean Single-Row Entry for Group Management */}
+        {/* Cloud Sync (GitHub Private Repo) & Group Management */}
         <section className="daydot-card overflow-hidden rounded-[22px] bg-[var(--bg-surface)]">
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <button
+              type="button"
+              onClick={onOpenCloudSync}
+              className="flex min-w-0 flex-1 items-center gap-2.5 text-left transition active:opacity-75"
+            >
+              <Cloud className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-[var(--fg-primary)]">
+                  云同步（GitHub）
+                </div>
+                <div className="truncate text-[11px] text-[var(--fg-muted)]">
+                  {!syncConfig
+                    ? '未配置 · 支持多端免费同步'
+                    : syncing
+                      ? '正在同步...'
+                      : syncMeta.lastError
+                        ? '上次同步失败，点击查看'
+                        : syncMeta.lastSyncedAt
+                          ? `${syncConfig.repo} · ${formatRelativeSince(syncMeta.lastSyncedAt)}`
+                          : `${syncConfig.repo} · 待同步`}
+                </div>
+              </div>
+            </button>
+
+            <div className="ml-2 flex shrink-0 items-center gap-1.5">
+              {syncConfig && (
+                <button
+                  type="button"
+                  disabled={syncing}
+                  onClick={onSyncNow}
+                  aria-label="立即同步"
+                  title="立即同步"
+                  className="flex h-8 w-8 items-center justify-center rounded-full transition active:scale-90 disabled:opacity-50"
+                  style={{ backgroundColor: emerald.soft, color: emerald.ink }}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onOpenCloudSync}
+                aria-label="配置云同步"
+                className="flex h-7 w-7 items-center justify-center text-[var(--fg-muted)]"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={onManageGroups}
-            className="flex w-full items-center justify-between px-4 py-4 text-left transition hover:bg-[var(--bg-canvas)] active:scale-[0.99]"
+            className="flex w-full items-center justify-between border-t border-[var(--border-soft)] px-4 py-3.5 text-left transition hover:bg-[var(--bg-canvas)] active:scale-[0.99]"
           >
             <div className="flex items-center gap-2.5 text-sm font-medium text-[var(--fg-primary)]">
               <FolderCog className="h-4 w-4 text-[var(--fg-muted)]" />

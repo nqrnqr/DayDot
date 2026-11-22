@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import type { EventItem, EventRecord, Group } from '../types/models';
 import { getColorToken } from '../constants/theme';
-import { db } from '../db/db';
+import { db, notifyLocalMutation } from '../db/db';
 import { formatRelativeSince, isSameDay } from '../utils/date';
 import { extractNumericValue, formatCleanNumber, getPrimaryNumberField } from '../utils/stats';
 import { EventIcon } from '../components/EventIcon';
@@ -274,6 +274,7 @@ export function HomePage({
       pinned: nextPinned,
       updatedAt: Date.now(),
     });
+    notifyLocalMutation();
     onNotify(nextPinned ? `已置顶「${event.name}」` : `已取消置顶「${event.name}」`);
   };
 
@@ -304,6 +305,7 @@ export function HomePage({
         });
       }
     });
+    notifyLocalMutation();
   };
 
   return (

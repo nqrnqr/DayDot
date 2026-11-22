@@ -26,6 +26,60 @@ export function createId(prefix: string): string {
 }
 
 const SEED_FLAG_KEY = 'daydot_seeded_v1';
+const USER_MODIFIED_KEY = 'daydot_user_modified_v1';
+
+export function isUserModified(): boolean {
+  try {
+    return localStorage.getItem(USER_MODIFIED_KEY) === '1';
+  } catch {
+    return true;
+  }
+}
+
+/** Mark that local data contains real user changes and notify auto-sync listeners */
+export function notifyLocalMutation(): void {
+  try {
+    localStorage.setItem(USER_MODIFIED_KEY, '1');
+  } catch {
+    // Ignore storage access errors
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('daydot-local-change'));
+  }
+}
+
+/** Soft-delete a record so deletion syncs cleanly across devices */
+export async function softDeleteRecord(recordId: string): Promise<void> {
+  const now = Date.now();
+  await db.records.update(recordId, { deletedAt: now, updatedAt: now });
+  notifyLocalMutation();
+}
+
+/** Soft-delete an event and all of its records */
+export async function softDeleteEvent(eventId: string): Promise<void> {
+  const now = Date.now();
+  await db.transaction('rw', db.events, db.records, async () => {
+    await db.records
+      .where('eventId')
+      .equals(eventId)
+      .modify({ deletedAt: now, updatedAt: now });
+    await db.events.update(eventId, { deletedAt: now, updatedAt: now });
+  });
+  notifyLocalMutation();
+}
+
+/** Soft-delete a group and detach its events */
+export async function softDeleteGroup(groupId: string): Promise<void> {
+  const now = Date.now();
+  await db.transaction('rw', db.groups, db.events, async () => {
+    await db.events
+      .where('groupId')
+      .equals(groupId)
+      .modify({ groupId: null, updatedAt: now });
+    await db.groups.update(groupId, { deletedAt: now, updatedAt: now });
+  });
+  notifyLocalMutation();
+}
 
 /** Seed realistic starter events (Pull-ups 20 reps, Piano 30 min, Bubble Tea, Vitamin) on first launch */
 export async function ensureSeeded(): Promise<void> {
@@ -35,11 +89,11 @@ export async function ensureSeeded(): Promise<void> {
     localStorage.setItem(SEED_FLAG_KEY, '1');
     return;
   }
-  await seedDemoData();
+  await seedDemoData(false);
   localStorage.setItem(SEED_FLAG_KEY, '1');
 }
 
-export async function seedDemoData(): Promise<void> {
+export async function seedDemoData(markModified = true): Promise<void> {
   const now = Date.now();
   const dayMs = 86_400_000;
 
@@ -74,9 +128,9 @@ export async function seedDemoData(): Promise<void> {
           type: 'select',
           multiple: false,
           options: [
-            { id: 'opt_wide', label: '宽握正手', color: '#1F9D75' },
-            { id: 'opt_std', label: '标准正手', color: '#4F6EF7' },
-            { id: 'opt_chin', label: '反手引体', color: '#D97706' },
+            { id: 'opt_wide', label: '宽握正手', color: '#38B28B' },
+            { id: 'opt_std', label: '标准正手', color: '#6E85D8' },
+            { id: 'opt_chin', label: '反手引体', color: '#E0A458' },
           ],
           defaultOptionIds: ['opt_std'],
         },
@@ -109,9 +163,9 @@ export async function seedDemoData(): Promise<void> {
           type: 'select',
           multiple: true,
           options: [
-            { id: 'opt_scale', label: '音阶哈农', color: '#4F6EF7' },
-            { id: 'opt_new', label: '新曲视奏', color: '#7C5CE6' },
-            { id: 'opt_review', label: '曲目打磨', color: '#0E8BB8' },
+            { id: 'opt_scale', label: '音阶哈农', color: '#6E85D8' },
+            { id: 'opt_new', label: '新曲视奏', color: '#937EDB' },
+            { id: 'opt_review', label: '曲目打磨', color: '#4DA6C8' },
           ],
           defaultOptionIds: ['opt_review'],
         },
@@ -156,9 +210,9 @@ export async function seedDemoData(): Promise<void> {
           type: 'select',
           multiple: false,
           options: [
-            { id: 'opt_heytea', label: '喜茶', color: '#D97706' },
-            { id: 'opt_chagee', label: '霸王茶姬', color: '#E05A6D' },
-            { id: 'opt_yidiandian', label: '一点点', color: '#1F9D75' },
+            { id: 'opt_heytea', label: '喜茶', color: '#E0A458' },
+            { id: 'opt_chagee', label: '霸王茶姬', color: '#DF7A86' },
+            { id: 'opt_yidiandian', label: '一点点', color: '#38B28B' },
           ],
           defaultOptionIds: ['opt_chagee'],
         },
@@ -169,7 +223,6 @@ export async function seedDemoData(): Promise<void> {
     },
   ];
 
-  // Helper to create deterministic past timestamps cleanly relative to today
   const makeTs = (daysAgo: number, hour: number, minute: number) => {
     const d = new Date(now - daysAgo * dayMs);
     d.setHours(hour, minute, 0, 0);
@@ -177,7 +230,6 @@ export async function seedDemoData(): Promise<void> {
   };
 
   const records: EventRecord[] = [
-    // Pull-ups records
     {
       id: 'rec_p1',
       eventId: 'evt_pullup',
@@ -234,7 +286,6 @@ export async function seedDemoData(): Promise<void> {
       updatedAt: now,
       deletedAt: null,
     },
-    // Piano records
     {
       id: 'rec_m1',
       eventId: 'evt_piano',
@@ -282,7 +333,6 @@ export async function seedDemoData(): Promise<void> {
       updatedAt: now,
       deletedAt: null,
     },
-    // Vitamin records
     {
       id: 'rec_v1',
       eventId: 'evt_vitamin',
@@ -310,7 +360,6 @@ export async function seedDemoData(): Promise<void> {
       updatedAt: now,
       deletedAt: null,
     },
-    // Bubble tea records
     {
       id: 'rec_t1',
       eventId: 'evt_tea',
@@ -337,6 +386,8 @@ export async function seedDemoData(): Promise<void> {
     await db.events.bulkPut(events);
     await db.records.bulkPut(records);
   });
+
+  if (markModified) notifyLocalMutation();
 }
 
 export async function exportBackupJson(): Promise<BackupPayload> {
@@ -375,6 +426,7 @@ export async function importBackupJson(
   });
 
   localStorage.setItem(SEED_FLAG_KEY, '1');
+  notifyLocalMutation();
   return {
     groups: payload.groups?.length ?? 0,
     events: payload.events?.length ?? 0,
@@ -389,6 +441,7 @@ export async function clearAllData(): Promise<void> {
     await db.records.clear();
   });
   localStorage.setItem(SEED_FLAG_KEY, '1');
+  notifyLocalMutation();
 }
 
 export function buildDefaultValues(event: EventItem): Record<string, number | string | string[]> {

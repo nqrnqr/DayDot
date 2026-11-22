@@ -2,7 +2,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { BarChart3, CalendarDays, Home, Settings, Undo2 } from 'lucide-react';
 import type { EventItem, EventRecord } from './types/models';
-import { buildDefaultValues, createId, db, ensureSeeded } from './db/db';
+import {
+  buildDefaultValues,
+  createId,
+  db,
+  ensureSeeded,
+  notifyLocalMutation,
+  softDeleteEvent,
+  softDeleteRecord,
+} from './db/db';
+import {
+  loadSyncConfig,
+  loadSyncMeta,
+  syncWithGitHub,
+  type GitHubSyncConfig,
+  type SyncStatusMeta,
+} from './services/githubSync';
 import { useThemeMode } from './utils/themeMode';
 import { HomePage } from './pages/HomePage';
 import { EventDetailPage } from './pages/EventDetailPage';
@@ -12,6 +27,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { QuickRecordSheet } from './components/QuickRecordSheet';
 import { EventEditorSheet } from './components/EventEditorSheet';
 import { GroupManagerSheet } from './components/GroupManagerSheet';
+import { CloudSyncSheet } from './components/CloudSyncSheet';
 
 type MainTab = 'home' | 'trends' | 'calendar' | 'settings';
 
@@ -65,6 +81,15 @@ export function App() {
   );
   const { preference, systemDark, isDark, setPreference } = useThemeMode();
 
+  // Cloud Sync state
+  const [syncConfig, setSyncConfig] = useState<GitHubSyncConfig | null>(() =>
+    loadSyncConfig(),
+  );
+  const [syncMeta, setSyncMeta] = useState<SyncStatusMeta>(() => loadSyncMeta());
+  const [syncing, setSyncing] = useState(false);
+  const [cloudSyncOpen, setCloudSyncOpen] = useState(false);
+  const autoSyncTimerRef = useRef<number | null>(null);
+
   const [recordSheetState, setRecordSheetState] = useState<{
     open: boolean;
     event: EventItem | null;
@@ -81,6 +106,14 @@ export function App() {
 
   const [toast, setToast] = useState<ToastState | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+
+  const showToast = useCallback((message: string, undoRecordId?: string) => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    setToast({ message, undoRecordId });
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+    }, 3200);
+  }, []);
 
   const navigate = useCallback((nextTab: MainTab, nextEventId: string | null) => {
     setActiveTabState(nextTab);
@@ -109,7 +142,6 @@ export function App() {
     navigate(activeTab, null);
   }, [activeTab, navigate]);
 
-  // Sync browser back/forward & manual hash changes
   useEffect(() => {
     const syncFromHash = () => {
       const parsed = parseHashRoute();
@@ -124,21 +156,78 @@ export function App() {
     };
   }, []);
 
-  const showToast = (message: string, undoRecordId?: string) => {
-    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    setToast({ message, undoRecordId });
-    toastTimerRef.current = window.setTimeout(() => {
-      setToast(null);
-    }, 3200);
-  };
-
   useEffect(() => {
     ensureSeeded().then(() => setReady(true));
   }, []);
 
-  const groups = useLiveQuery(() => db.groups.orderBy('order').toArray(), [], []);
-  const events = useLiveQuery(() => db.events.orderBy('order').toArray(), [], []);
-  const records = useLiveQuery(() => db.records.toArray(), [], []);
+  const runSync = useCallback(
+    async (silent: boolean, overrideConfig?: GitHubSyncConfig) => {
+      const cfg = overrideConfig ?? syncConfig;
+      if (!cfg) return;
+      setSyncing(true);
+      try {
+        const res = await syncWithGitHub(cfg);
+        setSyncMeta(loadSyncMeta());
+        if (!silent) {
+          showToast(res.summary);
+        } else if (res.pulledCount > 0) {
+          showToast(`云端已同步 ${res.pulledCount} 项更新`);
+        }
+      } catch (err) {
+        setSyncMeta(loadSyncMeta());
+        if (!silent) {
+          showToast(err instanceof Error ? err.message : '同步失败，请稍后重试');
+        }
+      } finally {
+        setSyncing(false);
+      }
+    },
+    [syncConfig, showToast],
+  );
+
+  // Silent auto-sync on app startup when enabled
+  const initialSyncDoneRef = useRef(false);
+  useEffect(() => {
+    if (!ready || initialSyncDoneRef.current) return;
+    initialSyncDoneRef.current = true;
+    if (syncConfig?.autoSync && navigator.onLine) {
+      void runSync(true);
+    }
+  }, [ready, syncConfig, runSync]);
+
+  // Debounced silent auto-sync after any local mutation
+  useEffect(() => {
+    if (!syncConfig?.autoSync) return;
+    const handleLocalChange = () => {
+      if (!navigator.onLine) return;
+      if (autoSyncTimerRef.current) window.clearTimeout(autoSyncTimerRef.current);
+      autoSyncTimerRef.current = window.setTimeout(() => {
+        void runSync(true);
+      }, 4000);
+    };
+    window.addEventListener('daydot-local-change', handleLocalChange);
+    return () => {
+      window.removeEventListener('daydot-local-change', handleLocalChange);
+      if (autoSyncTimerRef.current) window.clearTimeout(autoSyncTimerRef.current);
+    };
+  }, [syncConfig, runSync]);
+
+  // Filter out soft-deleted tombstones from UI queries
+  const groups = useLiveQuery(
+    () => db.groups.orderBy('order').filter((g) => !g.deletedAt).toArray(),
+    [],
+    [],
+  );
+  const events = useLiveQuery(
+    () => db.events.orderBy('order').filter((e) => !e.deletedAt).toArray(),
+    [],
+    [],
+  );
+  const records = useLiveQuery(
+    () => db.records.filter((r) => !r.deletedAt).toArray(),
+    [],
+    [],
+  );
 
   const selectedEvent = useMemo(
     () => events.find((e) => e.id === selectedEventId) ?? null,
@@ -165,21 +254,19 @@ export function App() {
       updatedAt: now,
       deletedAt: null,
     });
+    notifyLocalMutation();
     showToast(`已速记「${event.name}」`, id);
   };
 
   const handleUndoRecord = async () => {
     if (!toast?.undoRecordId) return;
-    await db.records.delete(toast.undoRecordId);
+    await softDeleteRecord(toast.undoRecordId);
     setToast(null);
     showToast('已撤销刚才的记录');
   };
 
   const handleDeleteEvent = async (event: EventItem) => {
-    await db.transaction('rw', db.events, db.records, async () => {
-      await db.records.where('eventId').equals(event.id).delete();
-      await db.events.delete(event.id);
-    });
+    await softDeleteEvent(event.id);
     closeEventDetail();
     showToast(`已删除事件「${event.name}」`);
   };
@@ -281,8 +368,13 @@ export function App() {
                 isDark={isDark}
                 themePreference={preference}
                 systemDark={systemDark}
+                syncConfig={syncConfig}
+                syncMeta={syncMeta}
+                syncing={syncing}
                 onChangeTheme={setPreference}
                 onManageGroups={() => setGroupManagerOpen(true)}
+                onOpenCloudSync={() => setCloudSyncOpen(true)}
+                onSyncNow={() => void runSync(false)}
                 onNotify={(m) => showToast(m)}
               />
             )}
@@ -375,6 +467,21 @@ export function App() {
           groups={groups}
           events={events}
           onClose={() => setGroupManagerOpen(false)}
+          onNotify={(m) => showToast(m)}
+        />
+
+        <CloudSyncSheet
+          open={cloudSyncOpen}
+          config={syncConfig}
+          meta={syncMeta}
+          syncing={syncing}
+          isDark={isDark}
+          onClose={() => setCloudSyncOpen(false)}
+          onConfigSaved={(next) => {
+            setSyncConfig(next);
+            setSyncMeta(loadSyncMeta());
+          }}
+          onSyncNow={(override) => runSync(false, override)}
           onNotify={(m) => showToast(m)}
         />
       </div>

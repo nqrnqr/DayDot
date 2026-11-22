@@ -9,7 +9,7 @@ import type {
   TextFieldDef,
 } from '../types/models';
 import { COLOR_PALETTE, ICON_CATALOG, OPTION_COLORS, getColorToken } from '../constants/theme';
-import { createId, db } from '../db/db';
+import { createId, db, notifyLocalMutation } from '../db/db';
 import { BottomSheetDialog } from './BottomSheetDialog';
 import { EventIcon } from './EventIcon';
 
@@ -86,6 +86,7 @@ export function EventEditorSheet({
       updatedAt: now,
       deletedAt: null,
     });
+    notifyLocalMutation();
     setGroupId(id);
     setNewGroupName('');
     setAddingGroup(false);
@@ -178,6 +179,7 @@ export function EventEditorSheet({
           fields,
           updatedAt: now,
         });
+        notifyLocalMutation();
         onSaved?.('已保存事件');
       } else {
         const count = await db.events.count();
@@ -196,6 +198,7 @@ export function EventEditorSheet({
           updatedAt: now,
           deletedAt: null,
         });
+        notifyLocalMutation();
         onSaved?.(`已创建「${trimmed}」`);
       }
       onClose();

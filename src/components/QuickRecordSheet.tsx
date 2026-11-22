@@ -2,7 +2,13 @@ import { useEffect, useId, useState } from 'react';
 import { CalendarClock, Check, Trash2 } from 'lucide-react';
 import type { EventItem, EventRecord, FieldValue } from '../types/models';
 import { getColorToken } from '../constants/theme';
-import { buildDefaultValues, createId, db } from '../db/db';
+import {
+  buildDefaultValues,
+  createId,
+  db,
+  notifyLocalMutation,
+  softDeleteRecord,
+} from '../db/db';
 import { toDatetimeLocalValue } from '../utils/date';
 import { BottomSheetDialog } from './BottomSheetDialog';
 
@@ -95,6 +101,7 @@ export function QuickRecordSheet({
           note: note.trim() || undefined,
           updatedAt: now,
         });
+        notifyLocalMutation();
         onSaved?.('已更新记录');
       } else {
         await db.records.add({
@@ -107,6 +114,7 @@ export function QuickRecordSheet({
           updatedAt: now,
           deletedAt: null,
         });
+        notifyLocalMutation();
         onSaved?.(`已记录「${event.name}」`);
       }
       onClose();
@@ -121,7 +129,7 @@ export function QuickRecordSheet({
       setConfirmDelete(true);
       return;
     }
-    await db.records.delete(editingRecord.id);
+    await softDeleteRecord(editingRecord.id);
     onSaved?.('已删除记录');
     onClose();
   };

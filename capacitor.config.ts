@@ -8,6 +8,13 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     backgroundColor: '#F7F7F8',
   },
+  plugins: {
+    CapacitorUpdater: {
+      // Self-hosted manual OTA via GitHub Pages (no third-party cloud calls)
+      autoUpdate: false,
+      statsUrl: '',
+    },
+  },
 };
 
 export default config;

@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  ArrowDownToLine,
   ChevronRight,
   Cloud,
   Download,
@@ -16,6 +17,14 @@ import type { BackupPayload } from '../types/models';
 import { getColorToken } from '../constants/theme';
 import type { ThemePreference } from '../utils/themeMode';
 import type { GitHubSyncConfig, SyncStatusMeta } from '../services/githubSync';
+import {
+  BUILTIN_APP_VERSION,
+  checkForOtaUpdate,
+  downloadAndApplyOta,
+  getActiveAppVersion,
+  isNativeAndroid,
+  type OtaManifest,
+} from '../services/otaUpdater';
 import { formatRelativeSince } from '../utils/date';
 import {
   clearAllData,
@@ -60,7 +69,50 @@ export function SettingsPage({
   const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge');
   const [confirmClear, setConfirmClear] = useState(false);
 
+  // Native APK OTA hot-update state
+  const nativeAndroid = isNativeAndroid();
+  const [appVersion, setAppVersion] = useState<string>(BUILTIN_APP_VERSION);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [applyingUpdate, setApplyingUpdate] = useState(false);
+  const [pendingOta, setPendingOta] = useState<OtaManifest | null>(null);
+
+  useEffect(() => {
+    void getActiveAppVersion().then(setAppVersion);
+  }, []);
+
   const emerald = getColorToken('emerald', isDark);
+
+  const handleCheckOta = async () => {
+    if (checkingUpdate || applyingUpdate) return;
+    setCheckingUpdate(true);
+    try {
+      const result = await checkForOtaUpdate();
+      setAppVersion(result.currentVersion);
+      if (result.hasUpdate) {
+        setPendingOta(result.remote);
+        onNotify(`发现新版本 v${result.remote.version}`);
+      } else {
+        setPendingOta(null);
+        onNotify(`已是最新版本 (v${result.currentVersion})`);
+      }
+    } catch (err) {
+      onNotify(err instanceof Error ? err.message : '检查更新失败');
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  const handleApplyOta = async () => {
+    if (!pendingOta || applyingUpdate) return;
+    setApplyingUpdate(true);
+    try {
+      onNotify(`正在下载 v${pendingOta.version}...`);
+      await downloadAndApplyOta(pendingOta);
+    } catch (err) {
+      setApplyingUpdate(false);
+      onNotify(err instanceof Error ? err.message : '热更新下载失败');
+    }
+  };
 
   const handleExport = async () => {
     const payload = await exportBackupJson();
@@ -240,6 +292,46 @@ export function SettingsPage({
             </div>
           </div>
 
+          {/* Native Android OTA Hot Update Row (only shown inside Android APK) */}
+          {nativeAndroid && (
+            <div className="flex items-center justify-between border-t border-[var(--border-soft)] px-4 py-3.5">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <ArrowDownToLine className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-[var(--fg-primary)]">
+                    应用热更新
+                  </div>
+                  <div className="truncate text-[11px] text-[var(--fg-muted)]">
+                    {pendingOta
+                      ? `发现新版 v${pendingOta.version}，无需重装 APK`
+                      : `当前版本 v${appVersion}`}
+                  </div>
+                </div>
+              </div>
+
+              {pendingOta ? (
+                <button
+                  type="button"
+                  disabled={applyingUpdate}
+                  onClick={handleApplyOta}
+                  className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-white transition active:scale-95 disabled:opacity-60"
+                  style={{ backgroundColor: emerald.solid }}
+                >
+                  {applyingUpdate ? '更新中...' : '立即更新'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={checkingUpdate}
+                  onClick={handleCheckOta}
+                  className="shrink-0 rounded-full bg-[var(--bg-subtle)] px-3 py-1.5 text-xs font-medium text-[var(--fg-primary)] transition active:scale-95 disabled:opacity-60"
+                >
+                  {checkingUpdate ? '检查中...' : '检查更新'}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Export JSON Row */}
           <button
             type="button"
@@ -325,7 +417,7 @@ export function SettingsPage({
         </section>
 
         <p className="pt-2 text-center text-[11px] text-[var(--fg-muted)] opacity-75">
-          DayDot · 日迹 v1.0
+          DayDot · 日迹 v{appVersion}
         </p>
       </main>
     </div>

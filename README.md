@@ -26,11 +26,12 @@
 
 ## Android 安装（离线 PWA 或 原生 APK）
 
-### 方式 A：直接下载安装 Android APK（推荐，云端自动构建）
-本项目已接入 **Capacitor + GitHub Actions 云端自动打包**（配置文件见 [.github/workflows/build-apk.yml](.github/workflows/build-apk.yml)），本地无需安装 Android Studio：
+### 方式 A：直接下载安装 Android APK（支持固定签名覆盖升级 + 内置热更新）
+本项目已接入 **Capacitor + GitHub Actions 云端自动打包**（[.github/workflows/build-apk.yml](.github/workflows/build-apk.yml)），本地无需安装 Android Studio：
 1. 打开仓库的 **Actions** → 左侧选择 **Build Android APK** → 点右上角 **Run workflow**（或推送 `v*` 标签自动发布到 Releases）。
-2. 等待约 2 分钟完成后，在任务详情底部的 **Artifacts** 下载 `DayDot-android-apk` 解压即可得到 `DayDot-android.apk` 装到手机。
-3. 支持 Android 系统返回手势与 GitHub 私有仓库多端同步。
+2. 等待约 2～3 分钟完成后，在任务详情底部的 **Artifacts** 下载 `DayDot-android-apk` 解压即可得到 `DayDot-android.apk`。
+3. **固定签名覆盖升级**：在仓库 `Settings → Secrets → Actions` 配置 `ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD` 后，每次构建均为同一永久签名 Release 包，覆盖安装 100% 保留本地数据与云同步配置。
+4. **应用内热更新（OTA）**：每次推送 `main` 分支时，`Deploy DayDot to GitHub Pages` 会同步生成 `ota/latest.json` 与 `ota/bundle.zip`；在 Android APK 的 **设置 → 应用热更新** 点击「检查更新」即可 2 秒原地更新界面，无需重新下载安装 APK。
 
 ### 方式 B：离线 PWA
 1. 在 Android 手机的 Chrome / Edge 浏览器中打开 https://nqrnqr.github.io/DayDot/ 。

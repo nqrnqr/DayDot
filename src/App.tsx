@@ -20,6 +20,7 @@ import {
   type GitHubSyncConfig,
   type SyncStatusMeta,
 } from './services/githubSync';
+import { initNativeUpdater } from './services/otaUpdater';
 import { useThemeMode } from './utils/themeMode';
 import { HomePage } from './pages/HomePage';
 import { EventDetailPage } from './pages/EventDetailPage';
@@ -159,6 +160,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    void initNativeUpdater();
     ensureSeeded().then(() => setReady(true));
   }, []);
 

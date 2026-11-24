@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   PointerSensor,
@@ -79,8 +79,25 @@ function SortableEventCard({
   const primaryNum = getPrimaryNumberField(event);
 
   const todayRecs = evRecords.filter((r) => isSameDay(r.timestamp, new Date()));
+  const doneToday = todayRecs.length > 0;
+
+  const prevTodayCountRef = useRef(todayRecs.length);
+  const [burstSeq, setBurstSeq] = useState(0);
+  const [celebrating, setCelebrating] = useState(false);
+
+  useEffect(() => {
+    const prev = prevTodayCountRef.current;
+    prevTodayCountRef.current = todayRecs.length;
+    if (todayRecs.length > prev) {
+      setBurstSeq((n) => n + 1);
+      setCelebrating(true);
+      const timer = window.setTimeout(() => setCelebrating(false), 620);
+      return () => window.clearTimeout(timer);
+    }
+  }, [todayRecs.length]);
+
   let subtitle = '-';
-  if (todayRecs.length > 0) {
+  if (doneToday) {
     if (primaryNum) {
       const sum = todayRecs.reduce(
         (acc, r) => acc + extractNumericValue(r, primaryNum.id),
@@ -121,7 +138,7 @@ function SortableEventCard({
           ? isDragging
             ? 'scale-[1.03] cursor-grabbing touch-none shadow-xl ring-2 ring-[var(--accent)]'
             : 'cursor-grab touch-none ring-1 ring-[var(--border-color)]'
-          : 'cursor-pointer active:scale-[0.98]'
+          : `cursor-pointer active:scale-[0.98] ${celebrating ? 'daydot-card-ack' : ''}`
       }`}
     >
       {/* Top row: Pastel icon badge + Quick Action OR Pin button */}
@@ -165,24 +182,58 @@ function SortableEventCard({
             <Pin className={`h-3.5 w-3.5 ${event.pinned ? 'fill-current' : ''}`} />
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickAction();
-            }}
-            aria-label={
-              event.quickMode ? `一键速记 ${event.name}` : `记录 ${event.name}`
-            }
-            title={event.quickMode ? '一键速记（按默认值）' : '打开记录确认弹窗'}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--fg-secondary)] transition hover:bg-[var(--bg-subtle-hover)] active:scale-90"
-          >
-            {event.quickMode ? (
-              <Zap className="h-4 w-4 fill-current" />
-            ) : (
-              <Plus className="h-4.5 w-4.5 stroke-[2.2]" />
+          <div className="relative flex items-center justify-center">
+            {celebrating && (
+              <span
+                key={`halo-${burstSeq}`}
+                aria-hidden="true"
+                className="daydot-halo-ring pointer-events-none absolute inset-0 rounded-full border-2"
+                style={{ borderColor: color.solid }}
+              />
             )}
-          </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickAction();
+              }}
+              aria-label={
+                event.quickMode ? `一键速记 ${event.name}` : `记录 ${event.name}`
+              }
+              title={
+                doneToday
+                  ? event.quickMode
+                    ? '今日已记 · 点击再速记一次'
+                    : '今日已记 · 点击再记一次'
+                  : event.quickMode
+                    ? '一键速记（按默认值）'
+                    : '打开记录确认弹窗'
+              }
+              className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-90 ${
+                celebrating ? 'daydot-btn-pop' : ''
+              } ${
+                doneToday
+                  ? 'text-white'
+                  : 'bg-[var(--bg-subtle)] text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle-hover)]'
+              }`}
+              style={
+                doneToday
+                  ? { backgroundColor: color.solid, color: '#FFFFFF' }
+                  : undefined
+              }
+            >
+              {celebrating ? (
+                <Check
+                  key={`chk-${burstSeq}`}
+                  className="daydot-icon-pop h-4.5 w-4.5 stroke-[2.6]"
+                />
+              ) : event.quickMode ? (
+                <Zap className="h-4 w-4 fill-current" />
+              ) : (
+                <Plus className="h-4.5 w-4.5 stroke-[2.2]" />
+              )}
+            </button>
+          </div>
         )}
       </div>
 
@@ -197,12 +248,12 @@ function SortableEventCard({
           )}
         </div>
         <p
-          className="mt-1 truncate text-xs font-normal"
+          key={celebrating ? `sub-${burstSeq}` : 'sub-idle'}
+          className={`mt-1 truncate text-xs font-normal transition-colors duration-200 ${
+            celebrating ? 'daydot-subtitle-tick' : ''
+          }`}
           style={{
-            color:
-              !organizeMode && todayRecs.length > 0
-                ? color.ink
-                : 'var(--fg-muted)',
+            color: !organizeMode && doneToday ? color.ink : 'var(--fg-muted)',
           }}
         >
           {organizeMode ? '按住拖动排序' : subtitle}
@@ -268,6 +319,19 @@ export function HomePage({
     return records.filter((r) => isSameDay(r.timestamp, now)).length;
   }, [records]);
 
+  const prevTotalTodayRef = useRef(todayCount);
+  const [todayPillPop, setTodayPillPop] = useState(false);
+
+  useEffect(() => {
+    const prev = prevTotalTodayRef.current;
+    prevTotalTodayRef.current = todayCount;
+    if (todayCount > prev) {
+      setTodayPillPop(true);
+      const timer = window.setTimeout(() => setTodayPillPop(false), 480);
+      return () => window.clearTimeout(timer);
+    }
+  }, [todayCount]);
+
   const handleTogglePin = async (event: EventItem) => {
     const nextPinned = !event.pinned;
     await db.events.update(event.id, {
@@ -318,7 +382,9 @@ export function HomePage({
             </h1>
             {todayCount > 0 && !organizeMode && (
               <span
-                className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
+                  todayPillPop ? 'daydot-btn-pop' : ''
+                }`}
                 style={{
                   backgroundColor: getColorToken('emerald', isDark).soft,
                   color: getColorToken('emerald', isDark).ink,

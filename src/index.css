@@ -208,7 +208,113 @@ dialog.daydot-dialog::backdrop {
 }
 
 .animate-sheet-up {
-  animation: slideUpSheet 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: slideUpSheet 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+/* Task completion micro-interactions (compositor-only transform/opacity, spring linear() easing) */
+@keyframes daydotBtnPop {
+  0% {
+    transform: scale(0.84);
+  }
+  40% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes daydotIconEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.55) rotate(-14deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes daydotHaloBurst {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.72);
+  }
+}
+
+@keyframes daydotCardAck {
+  0% {
+    transform: scale(1);
+  }
+  28% {
+    transform: scale(0.985);
+  }
+  65% {
+    transform: scale(1.012);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes daydotSubtitleTick {
+  0% {
+    opacity: 0.45;
+    transform: translateY(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:root {
+  /* Physics-based spring curve (with cubic-bezier fallback below for older engines) */
+  --daydot-spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077,
+    1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%,
+    1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%,
+    0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1
+  );
+}
+
+.daydot-btn-pop {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: daydotBtnPop 0.46s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-timing-function: var(--daydot-spring);
+  }
+}
+
+.daydot-icon-pop {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: daydotIconEnter 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-timing-function: var(--daydot-spring);
+  }
+}
+
+.daydot-halo-ring {
+  opacity: 0;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: daydotHaloBurst 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+.daydot-card-ack {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: daydotCardAck 0.38s ease-out;
+  }
+}
+
+.daydot-subtitle-tick {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: daydotSubtitleTick 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 
 @media (forced-colors: active) {

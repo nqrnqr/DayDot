@@ -95,7 +95,7 @@ export function BottomSheetDialog({
       >
         <div
           ref={contentRef}
-          className="animate-sheet-up flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-[var(--bg-surface)] shadow-2xl sm:rounded-[28px]"
+          className="animate-sheet-up flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-[var(--bg-surface)] shadow-2xl sm:max-h-[88dvh] sm:max-w-[500px] sm:rounded-[28px]"
         >
           {/* Subtle drag indicator */}
           <div className="flex justify-center pt-2.5 pb-1 sm:hidden">
@@ -103,7 +103,7 @@ export function BottomSheetDialog({
           </div>
 
           <div className="flex items-center justify-between gap-3 px-5 pt-3.5 pb-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 {accentColor && (
                   <span
@@ -126,13 +126,13 @@ export function BottomSheetDialog({
               )}
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex shrink-0 items-center gap-1.5">
               {headerRight}
               <button
                 type="button"
                 onClick={() => dialogRef.current?.close()}
                 aria-label="关闭弹窗"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--fg-secondary)] transition-colors hover:bg-[var(--bg-subtle-hover)] active:scale-95"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--fg-secondary)] transition-colors hover:bg-[var(--bg-subtle-hover)] active:scale-95"
               >
                 <X className="h-4 w-4" />
               </button>

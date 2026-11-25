@@ -2,8 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { BarChart3, CalendarDays, Home, Settings, Undo2 } from 'lucide-react';
+import {
+  BarChart3,
+  CalendarDays,
+  Cloud,
+  Home,
+  Plus,
+  RefreshCw,
+  Settings,
+  Undo2,
+} from 'lucide-react';
 import type { EventItem, EventRecord } from './types/models';
+import { getColorToken } from './constants/theme';
+import { isSameDay } from './utils/date';
 import {
   buildDefaultValues,
   createId,
@@ -403,6 +414,28 @@ export function App() {
     [records, selectedEventId],
   );
 
+  const todayRecordCount = useMemo(() => {
+    const now = new Date();
+    return records.filter((r) => isSameDay(r.timestamp, now)).length;
+  }, [records]);
+
+  const activeEventCount = useMemo(
+    () => events.filter((e) => !e.archived).length,
+    [events],
+  );
+
+  const emeraldToken = getColorToken('emerald', isDark);
+
+  const sidebarSyncLabel = !syncConfig
+    ? '未配置云同步'
+    : syncing
+      ? '同步中...'
+      : syncMeta.lastError
+        ? '同步失败'
+        : syncMeta.pendingChanges
+          ? '有待同步改动'
+          : '云端已同步';
+
   const handleQuickRecord = async (event: EventItem) => {
     const now = Date.now();
     const id = createId('rec');
@@ -442,147 +475,286 @@ export function App() {
     );
   }
 
+  const navItems = [
+    ['home', '主页', Home],
+    ['trends', '趋势', BarChart3],
+    ['calendar', '查看', CalendarDays],
+    ['settings', '设置', Settings],
+  ] as const;
+
   return (
-    <div className="min-h-dvh bg-[var(--bg-outer)] sm:py-4">
-      <div className="relative mx-auto min-h-dvh w-full max-w-[460px] bg-[var(--bg-canvas)] sm:min-h-[calc(100dvh-2rem)] sm:overflow-hidden sm:rounded-[32px] sm:shadow-[0_12px_40px_rgba(0,0,0,0.14)]">
-        {selectedEvent ? (
-          <EventDetailPage
-            event={selectedEvent}
-            records={selectedEventRecords}
-            isDark={isDark}
-            onBack={closeEventDetail}
-            onEditEvent={(ev) =>
-              setEventEditorState({ open: true, editingEvent: ev })
+    <div className="min-h-dvh bg-[var(--bg-outer)] sm:py-4 lg:bg-[var(--bg-canvas)] lg:py-0">
+      <div className="relative mx-auto min-h-dvh w-full max-w-[460px] bg-[var(--bg-canvas)] sm:min-h-[calc(100dvh-2rem)] sm:max-w-[500px] sm:overflow-hidden sm:rounded-[32px] sm:shadow-[0_12px_40px_rgba(0,0,0,0.14)] lg:mx-0 lg:flex lg:min-h-dvh lg:max-w-none lg:overflow-visible lg:rounded-none lg:shadow-none">
+        {/* Desktop Persistent Left Sidebar (lg and above) */}
+        <aside
+          aria-label="桌面端侧边导航"
+          className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-[244px] lg:shrink-0 lg:flex-col lg:border-r lg:border-[var(--border-soft)] lg:bg-[var(--bg-surface)] lg:px-4 lg:py-6 xl:w-[260px]"
+        >
+          {/* Brand + Today Badge */}
+          <div className="px-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('home')}
+                className="text-left focus:outline-none"
+              >
+                <span className="text-[26px] leading-none font-extrabold tracking-tight text-[var(--fg-primary)] italic">
+                  DayDot
+                </span>
+              </button>
+              {todayRecordCount > 0 && (
+                <span
+                  className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums"
+                  style={{
+                    backgroundColor: emeraldToken.soft,
+                    color: emeraldToken.ink,
+                  }}
+                >
+                  今日 {todayRecordCount} 迹
+                </span>
+              )}
+            </div>
+            <p className="mt-1.5 text-xs text-[var(--fg-muted)]">
+              轻量无压力的生活迹点记录
+            </p>
+          </div>
+
+          {/* Primary Quick Action */}
+          <button
+            type="button"
+            onClick={() =>
+              setEventEditorState({ open: true, editingEvent: null })
             }
-            onAddRecord={(ev, initialTimestamp) =>
-              setRecordSheetState({
-                open: true,
-                event: ev,
-                editingRecord: null,
-                initialTimestamp,
-              })
-            }
-            onEditRecord={(ev, rec) =>
-              setRecordSheetState({
-                open: true,
-                event: ev,
-                editingRecord: rec,
-              })
-            }
-          />
-        ) : (
-          <>
-            {activeTab === 'home' && (
-              <HomePage
-                groups={groups}
-                events={events}
-                records={records}
-                isDark={isDark}
-                onSelectEvent={openEventDetail}
-                onQuickRecord={handleQuickRecord}
-                onOpenRecordSheet={(ev) =>
-                  setRecordSheetState({
-                    open: true,
-                    event: ev,
-                    editingRecord: null,
-                  })
-                }
-                onCreateEvent={() =>
-                  setEventEditorState({ open: true, editingEvent: null })
-                }
-                onManageGroups={() => setGroupManagerOpen(true)}
-                onNotify={(m) => showToast(m)}
-              />
-            )}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--pill-active-bg)] px-4 py-2.5 text-[13px] font-semibold text-[var(--pill-active-fg)] shadow-xs transition hover:opacity-92 active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4 stroke-[2.4]" />
+            新建事件
+          </button>
 
-            {activeTab === 'trends' && (
-              <TrendsPage
-                groups={groups}
-                events={events}
-                records={records}
-                isDark={isDark}
-                onSelectEvent={openEventDetail}
-              />
-            )}
+          {/* Main Navigation Links */}
+          <nav aria-label="主导航" className="mt-6 flex-1 space-y-1">
+            {navItems.map(([id, label, Icon]) => {
+              const active = !selectedEvent && activeTab === id;
+              const isParentOfDetail = Boolean(selectedEvent) && activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[14px] transition ${
+                    active
+                      ? 'bg-[var(--bg-subtle)] font-semibold text-[var(--fg-primary)]'
+                      : isParentOfDetail
+                        ? 'bg-[var(--bg-canvas)] font-medium text-[var(--fg-primary)]'
+                        : 'font-medium text-[var(--fg-secondary)] hover:bg-[var(--bg-canvas)] hover:text-[var(--fg-primary)]'
+                  }`}
+                >
+                  <Icon
+                    className={`h-[18px] w-[18px] shrink-0 ${
+                      active || isParentOfDetail ? 'stroke-[2.3]' : 'stroke-[1.9]'
+                    }`}
+                  />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-            {activeTab === 'calendar' && (
-              <CalendarViewPage
-                events={events}
-                records={records}
-                isDark={isDark}
-                onSelectEvent={openEventDetail}
-                onEditRecord={(ev, rec) =>
-                  setRecordSheetState({
-                    open: true,
-                    event: ev,
-                    editingRecord: rec,
-                  })
-                }
-              />
-            )}
+          {/* Sidebar Footer: Cloud Sync Status & Compact Stats */}
+          <div className="mt-auto space-y-2.5 border-t border-[var(--border-soft)] pt-4">
+            <div className="flex items-center gap-1.5 rounded-2xl bg-[var(--bg-canvas)] px-3 py-2">
+              <button
+                type="button"
+                onClick={() => setCloudSyncOpen(true)}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left transition hover:opacity-80"
+              >
+                <Cloud
+                  className={`h-4 w-4 shrink-0 ${
+                    syncMeta.lastError
+                      ? 'text-rose-500'
+                      : syncConfig
+                        ? ''
+                        : 'text-[var(--fg-muted)]'
+                  }`}
+                  style={
+                    syncConfig && !syncMeta.lastError
+                      ? { color: emeraldToken.ink }
+                      : undefined
+                  }
+                />
+                <span
+                  className={`truncate text-xs font-medium ${
+                    syncMeta.lastError
+                      ? 'text-rose-500'
+                      : 'text-[var(--fg-secondary)]'
+                  }`}
+                >
+                  {sidebarSyncLabel}
+                </span>
+              </button>
+              {syncConfig && (
+                <button
+                  type="button"
+                  disabled={syncing}
+                  onClick={() => void runSync(false)}
+                  aria-label="立即同步"
+                  title="立即同步"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition hover:opacity-85 active:scale-90 disabled:opacity-50"
+                  style={{
+                    backgroundColor: emeraldToken.soft,
+                    color: emeraldToken.ink,
+                  }}
+                >
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`}
+                  />
+                </button>
+              )}
+            </div>
 
-            {activeTab === 'settings' && (
-              <SettingsPage
-                groupCount={groups.length}
-                eventCount={events.length}
-                recordCount={records.length}
-                isDark={isDark}
-                themePreference={preference}
-                systemDark={systemDark}
-                syncConfig={syncConfig}
-                syncMeta={syncMeta}
-                syncing={syncing}
-                onChangeTheme={setPreference}
-                onManageGroups={() => setGroupManagerOpen(true)}
-                onOpenCloudSync={() => setCloudSyncOpen(true)}
-                onSyncNow={() => void runSync(false)}
-                onNotify={(m) => showToast(m)}
-              />
-            )}
+            <div className="flex items-center justify-between px-2 text-[11px] text-[var(--fg-muted)] tabular-nums">
+              <span>{activeEventCount} 个事件</span>
+              <span>{records.length} 条记录</span>
+            </div>
+          </div>
+        </aside>
 
-            <nav
-              aria-label="主导航"
-              className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[460px] border-t border-[var(--border-soft)] bg-[var(--bg-surface-blur)] px-2 pt-2 backdrop-blur-md sm:rounded-b-[32px]"
-            >
-              <div className="grid grid-cols-4">
-                {(
-                  [
-                    ['home', '主页', Home],
-                    ['trends', '趋势', BarChart3],
-                    ['calendar', '查看', CalendarDays],
-                    ['settings', '设置', Settings],
-                  ] as const
-                ).map(([id, label, Icon]) => {
-                  const active = activeTab === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setActiveTab(id)}
-                      className={`flex flex-col items-center gap-1 py-1 transition ${
-                        active
-                          ? 'text-[var(--fg-primary)]'
-                          : 'text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]'
-                      }`}
-                    >
-                      <Icon
-                        className={`h-5 w-5 ${active ? 'stroke-[2.4]' : 'stroke-[1.9]'}`}
-                      />
-                      <span className="text-[11px] font-semibold">{label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </nav>
-          </>
-        )}
+        {/* Main Content Viewport */}
+        <div className="min-w-0 flex-1">
+          {selectedEvent ? (
+            <EventDetailPage
+              event={selectedEvent}
+              records={selectedEventRecords}
+              isDark={isDark}
+              onBack={closeEventDetail}
+              onEditEvent={(ev) =>
+                setEventEditorState({ open: true, editingEvent: ev })
+              }
+              onAddRecord={(ev, initialTimestamp) =>
+                setRecordSheetState({
+                  open: true,
+                  event: ev,
+                  editingRecord: null,
+                  initialTimestamp,
+                })
+              }
+              onEditRecord={(ev, rec) =>
+                setRecordSheetState({
+                  open: true,
+                  event: ev,
+                  editingRecord: rec,
+                })
+              }
+            />
+          ) : (
+            <>
+              {activeTab === 'home' && (
+                <HomePage
+                  groups={groups}
+                  events={events}
+                  records={records}
+                  isDark={isDark}
+                  onSelectEvent={openEventDetail}
+                  onQuickRecord={handleQuickRecord}
+                  onOpenRecordSheet={(ev) =>
+                    setRecordSheetState({
+                      open: true,
+                      event: ev,
+                      editingRecord: null,
+                    })
+                  }
+                  onCreateEvent={() =>
+                    setEventEditorState({ open: true, editingEvent: null })
+                  }
+                  onManageGroups={() => setGroupManagerOpen(true)}
+                  onNotify={(m) => showToast(m)}
+                />
+              )}
+
+              {activeTab === 'trends' && (
+                <TrendsPage
+                  groups={groups}
+                  events={events}
+                  records={records}
+                  isDark={isDark}
+                  onSelectEvent={openEventDetail}
+                />
+              )}
+
+              {activeTab === 'calendar' && (
+                <CalendarViewPage
+                  events={events}
+                  records={records}
+                  isDark={isDark}
+                  onSelectEvent={openEventDetail}
+                  onEditRecord={(ev, rec) =>
+                    setRecordSheetState({
+                      open: true,
+                      event: ev,
+                      editingRecord: rec,
+                    })
+                  }
+                />
+              )}
+
+              {activeTab === 'settings' && (
+                <SettingsPage
+                  groupCount={groups.length}
+                  eventCount={events.length}
+                  recordCount={records.length}
+                  isDark={isDark}
+                  themePreference={preference}
+                  systemDark={systemDark}
+                  syncConfig={syncConfig}
+                  syncMeta={syncMeta}
+                  syncing={syncing}
+                  onChangeTheme={setPreference}
+                  onManageGroups={() => setGroupManagerOpen(true)}
+                  onOpenCloudSync={() => setCloudSyncOpen(true)}
+                  onSyncNow={() => void runSync(false)}
+                  onNotify={(m) => showToast(m)}
+                />
+              )}
+
+              {/* Mobile / Tablet Bottom Tab Navigation */}
+              <nav
+                aria-label="底部主导航"
+                className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[460px] border-t border-[var(--border-soft)] bg-[var(--bg-surface-blur)] px-2 pt-2 backdrop-blur-md sm:max-w-[500px] sm:rounded-b-[32px] lg:hidden"
+              >
+                <div className="grid grid-cols-4">
+                  {navItems.map(([id, label, Icon]) => {
+                    const active = activeTab === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setActiveTab(id)}
+                        className={`flex flex-col items-center gap-1 py-1 transition ${
+                          active
+                            ? 'text-[var(--fg-primary)]'
+                            : 'text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]'
+                        }`}
+                      >
+                        <Icon
+                          className={`h-5 w-5 ${active ? 'stroke-[2.4]' : 'stroke-[1.9]'}`}
+                        />
+                        <span className="text-[11px] font-semibold">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
+            </>
+          )}
+        </div>
 
         {/* Toast Notification */}
         {toast && (
           <div
             role="status"
             aria-live="polite"
-            className="fixed inset-x-0 bottom-20 z-40 mx-auto flex w-max max-w-[calc(100%_-_2rem)] items-center gap-2.5 rounded-full bg-[var(--pill-active-bg)] px-4 py-2.5 text-xs font-medium text-[var(--pill-active-fg)] shadow-lg backdrop-blur-md"
+            className="fixed inset-x-0 bottom-20 z-40 mx-auto flex w-max max-w-[calc(100%_-_2rem)] items-center gap-2.5 rounded-full bg-[var(--pill-active-bg)] px-4 py-2.5 text-xs font-medium text-[var(--pill-active-fg)] shadow-lg backdrop-blur-md lg:bottom-6 lg:left-[244px] xl:left-[260px]"
           >
             <span className="min-w-0 truncate">{toast.message}</span>
             {toast.undoRecordId && (

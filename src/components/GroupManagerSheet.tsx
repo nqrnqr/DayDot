@@ -149,7 +149,7 @@ function SortableGroupRow({
               type="button"
               onClick={onDeleteClick}
               aria-label={`删除分组 ${group.name}`}
-              className={`flex h-8 items-center justify-center rounded-full transition ${
+              className={`flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-full transition ${
                 confirmDelete
                   ? 'bg-red-600 px-2.5 text-[11px] font-semibold text-white'
                   : 'w-8 text-[var(--fg-muted)] hover:bg-red-500/12 hover:text-red-500'

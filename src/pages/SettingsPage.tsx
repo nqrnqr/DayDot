@@ -179,18 +179,21 @@ export function SettingsPage({
             : '待首次同步';
 
   return (
-    <div className="flex flex-col pb-24">
-      <header className="pt-safe sticky top-0 z-20 flex items-baseline justify-between bg-[var(--bg-canvas-blur)] px-5 pb-3 backdrop-blur-md">
-        <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)]">
-          设置
-        </h1>
-        <span className="text-xs text-[var(--fg-muted)] tabular-nums">
-          {eventCount} 事件 · {recordCount} 记录
-        </span>
+    <div className="flex flex-col pb-24 lg:pb-12">
+      <header className="pt-safe sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pb-3 backdrop-blur-md lg:px-8 lg:pt-7 lg:pb-4">
+        <div className="mx-auto flex w-full max-w-2xl items-baseline justify-between">
+          <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)] lg:text-[26px]">
+            设置
+          </h1>
+          <span className="text-xs text-[var(--fg-muted)] tabular-nums">
+            {eventCount} 事件 · {recordCount} 记录
+          </span>
+        </div>
       </header>
 
-      <main className="space-y-4 px-4 pt-1">
-        {/* Group 1: Appearance & Organization */}
+      <main className="px-4 pt-1 lg:px-8 lg:pt-2">
+        <div className="mx-auto w-full max-w-2xl space-y-4 lg:space-y-5">
+          {/* Group 1: Appearance & Organization */}
         <section className="daydot-card overflow-hidden rounded-[22px] bg-[var(--bg-surface)]">
           {/* Theme selector */}
           <div className="space-y-2.5 px-4 py-4">
@@ -443,6 +446,7 @@ export function SettingsPage({
         <p className="pt-2 text-center text-[11px] text-[var(--fg-muted)] opacity-75">
           DayDot · 日迹 v{appVersion}
         </p>
+        </div>
       </main>
     </div>
   );

@@ -113,11 +113,11 @@ export function AnnualHeatmap({
       </div>
 
       <div className="relative">
-        {/* Soft edge fade masks when horizontally scrollable */}
+        {/* Soft edge fade masks when horizontally scrollable on narrow viewports */}
         {fadeEdges.left && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6"
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 lg:hidden"
             style={{
               background:
                 'linear-gradient(to right, var(--bg-surface) 0%, transparent 100%)',
@@ -127,7 +127,7 @@ export function AnnualHeatmap({
         {fadeEdges.right && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6"
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 lg:hidden"
             style={{
               background:
                 'linear-gradient(to left, var(--bg-surface) 0%, transparent 100%)',
@@ -137,13 +137,21 @@ export function AnnualHeatmap({
 
         <div
           ref={scrollRef}
+          tabIndex={0}
+          role="region"
+          aria-label={`${year} 年记录热力图`}
           onScroll={updateFadeEdges}
-          className="no-scrollbar overflow-x-auto pb-1"
+          className="no-scrollbar overflow-x-auto pb-1 lg:overflow-visible"
         >
-          <div className="inline-flex gap-[5px]">
+          <div
+            className="inline-flex gap-[5px] lg:grid lg:w-full lg:gap-[3px]"
+            style={{
+              gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+            }}
+          >
             {columns.map((col, colIdx) => (
-              <div key={colIdx} className="flex flex-col gap-[5px]">
-                <div className="h-4 text-[11px] font-medium whitespace-nowrap text-[var(--fg-muted)]">
+              <div key={colIdx} className="flex flex-col gap-[5px] lg:gap-[3px]">
+                <div className="h-4 overflow-visible text-[11px] font-medium whitespace-nowrap text-[var(--fg-muted)]">
                   {col.monthLabel ?? ''}
                 </div>
                 {col.days.map((day) => {
@@ -172,7 +180,7 @@ export function AnnualHeatmap({
                       }}
                       aria-label={`${day.dateKey}: ${stat?.count ?? 0} 次`}
                       title={`${day.dateKey}: ${stat?.count ?? 0} 次`}
-                      className={`flex h-[18px] w-[18px] items-center justify-center rounded-[5px] text-[9px] font-semibold transition-transform active:scale-90 ${
+                      className={`flex h-[18px] w-[18px] items-center justify-center rounded-[5px] text-[9px] font-semibold transition-transform active:scale-90 lg:aspect-square lg:h-auto lg:w-full lg:rounded-[4px] lg:text-[8px] xl:text-[9px] ${
                         day.isFuture && val === 0 ? 'opacity-45' : ''
                       } ${isSelected ? 'ring-2 ring-[var(--fg-primary)] ring-offset-1 ring-offset-[var(--bg-surface)]' : ''}`}
                       style={{

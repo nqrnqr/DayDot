@@ -140,12 +140,12 @@ function SortableEventCard({
           onSelect();
         }
       }}
-      className={`daydot-card group flex min-h-[126px] flex-col justify-between rounded-[22px] bg-[var(--bg-surface)] p-4 transition-transform duration-150 ${
+      className={`daydot-card group flex min-h-[126px] flex-col justify-between rounded-[22px] bg-[var(--bg-surface)] p-4 transition-[transform,box-shadow] duration-150 lg:min-h-[144px] lg:p-5 ${
         organizeMode
           ? isDragging
             ? 'scale-[1.03] cursor-grabbing touch-none shadow-xl ring-2 ring-[var(--accent)]'
             : 'cursor-grab touch-none ring-1 ring-[var(--border-color)]'
-          : `cursor-pointer active:scale-[0.98] ${celebrating ? 'daydot-card-ack' : ''}`
+          : `cursor-pointer active:scale-[0.98] lg:hover:-translate-y-0.5 lg:hover:shadow-[0_6px_22px_rgba(15,23,42,0.06)] ${celebrating ? 'daydot-card-ack' : ''}`
       }`}
     >
       {/* Top row: Pastel icon badge + Quick Action OR Pin button */}
@@ -396,200 +396,241 @@ export function HomePage({
   };
 
   return (
-    <div className="flex flex-col pb-24">
-      <header className="pt-safe sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pb-3 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-[26px] font-extrabold tracking-tight text-[var(--fg-primary)] italic">
-              DayDot
-            </h1>
-            {todayCount > 0 && !organizeMode && (
-              <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
-                  todayPillPop ? 'daydot-btn-pop' : ''
-                }`}
+    <div className="flex flex-col pb-24 lg:pb-12">
+      <header className="pt-safe sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pb-3 backdrop-blur-md lg:px-8 lg:pt-7 lg:pb-4">
+        <div className="mx-auto w-full max-w-[1160px]">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-baseline gap-2.5">
+              <h1 className="text-[26px] font-extrabold tracking-tight text-[var(--fg-primary)] italic lg:hidden">
+                DayDot
+              </h1>
+              <h1 className="hidden text-[26px] font-semibold tracking-tight text-[var(--fg-primary)] lg:block">
+                主页
+              </h1>
+              {todayCount > 0 && !organizeMode && (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums lg:hidden ${
+                    todayPillPop ? 'daydot-btn-pop' : ''
+                  }`}
+                  style={{
+                    backgroundColor: getColorToken('emerald', isDark).soft,
+                    color: getColorToken('emerald', isDark).ink,
+                  }}
+                >
+                  今日 {todayCount} 迹
+                </span>
+              )}
+              {!organizeMode && (
+                <span className="hidden text-xs text-[var(--fg-muted)] tabular-nums lg:inline">
+                  共 {filteredEvents.length} 个事件
+                </span>
+              )}
+              {organizeMode && (
+                <span className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--fg-secondary)]">
+                  拖动卡片排序
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 lg:gap-2">
+              {organizeMode ? (
+                <button
+                  type="button"
+                  onClick={() => setOrganizeMode(false)}
+                  className="inline-flex h-9 items-center gap-1 rounded-full bg-[var(--pill-active-bg)] px-3.5 text-xs font-semibold text-[var(--pill-active-fg)] transition active:scale-95"
+                >
+                  <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+                  完成
+                </button>
+              ) : (
+                <>
+                  {/* Desktop inline persistent search bar */}
+                  <div className="relative hidden items-center lg:flex">
+                    <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-[var(--fg-muted)]" />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="搜索事件..."
+                      aria-label="搜索事件"
+                      className="w-56 rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] py-1.5 pr-8 pl-9 text-xs text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] transition focus:w-64 focus:border-[var(--fg-muted)] focus:outline-none"
+                    />
+                    {query && (
+                      <button
+                        type="button"
+                        onClick={() => setQuery('')}
+                        aria-label="清空搜索"
+                        className="absolute right-2.5 flex h-5 w-5 items-center justify-center rounded-full text-[var(--fg-muted)] hover:bg-[var(--bg-subtle)] hover:text-[var(--fg-primary)]"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mobile search toggle */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchOpen((v) => !v);
+                      if (searchOpen) setQuery('');
+                    }}
+                    aria-label="搜索事件"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg-secondary)] transition hover:bg-[var(--bg-subtle-hover)] active:scale-95 lg:hidden"
+                  >
+                    {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+                  </button>
+
+                  {sortedActiveEvents.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchOpen(false);
+                        setQuery('');
+                        setOrganizeMode(true);
+                      }}
+                      aria-label="排序与置顶"
+                      title="卡片排序与置顶"
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg-secondary)] transition hover:bg-[var(--bg-subtle-hover)] active:scale-95 lg:w-auto lg:gap-1.5 lg:border lg:border-[var(--border-color)] lg:bg-[var(--bg-surface)] lg:px-3.5 lg:text-xs lg:font-medium lg:hover:bg-[var(--bg-subtle)]"
+                    >
+                      <ArrowUpDown className="h-4.5 w-4.5 lg:h-3.5 lg:w-3.5" />
+                      <span className="hidden lg:inline">排序与置顶</span>
+                    </button>
+                  )}
+
+                  {/* Mobile quick create button (desktop uses sidebar primary CTA) */}
+                  <button
+                    type="button"
+                    onClick={onCreateEvent}
+                    aria-label="新建事件"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg-primary)] transition hover:bg-[var(--bg-subtle-hover)] active:scale-95 lg:hidden"
+                  >
+                    <Plus className="h-6 w-6 stroke-[2.2]" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {searchOpen && !organizeMode && (
+            <div className="mt-3 lg:hidden">
+              <input
+                type="search"
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="搜索事件名称..."
+                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] focus:border-[var(--fg-muted)] focus:outline-none"
+              />
+            </div>
+          )}
+
+          {/* Group Filter Pills + Manage Groups Button */}
+          <div className="no-scrollbar mt-3.5 flex items-center gap-2 overflow-x-auto pb-0.5 lg:mt-4">
+            <button
+              type="button"
+              onClick={() => setSelectedGroupId('all')}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition active:scale-95 ${
+                selectedGroupId === 'all'
+                  ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)] shadow-xs'
+                  : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]'
+              }`}
+            >
+              <Home className="h-3.5 w-3.5" />
+              所有
+            </button>
+
+            {groups.map((grp) => {
+              const active = selectedGroupId === grp.id;
+              return (
+                <button
+                  key={grp.id}
+                  type="button"
+                  onClick={() => setSelectedGroupId(grp.id)}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition active:scale-95 ${
+                    active
+                      ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)] shadow-xs'
+                      : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]'
+                  }`}
+                >
+                  {grp.name}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={onManageGroups}
+              aria-label="管理分组"
+              title="管理分组"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--bg-surface)] text-[var(--fg-muted)] transition hover:bg-[var(--bg-subtle)] hover:text-[var(--fg-primary)] active:scale-95 lg:w-auto lg:gap-1.5 lg:px-3 lg:text-xs lg:font-medium"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline">管理分组</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Responsive Draggable Event Cards Grid */}
+      <main className="px-4 pt-1 lg:px-8 lg:pt-2">
+        <div className="mx-auto w-full max-w-[1160px]">
+          {filteredEvents.length === 0 ? (
+            <div className="mt-10 flex flex-col items-center rounded-[24px] bg-[var(--bg-surface)] px-6 py-12 text-center shadow-[0_1px_2px_rgba(15,23,42,0.05)] lg:mx-auto lg:max-w-md lg:py-16">
+              <div
+                className="flex h-12 w-12 items-center justify-center rounded-2xl"
                 style={{
                   backgroundColor: getColorToken('emerald', isDark).soft,
                   color: getColorToken('emerald', isDark).ink,
                 }}
               >
-                今日 {todayCount} 迹
-              </span>
-            )}
-            {organizeMode && (
-              <span className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--fg-secondary)]">
-                拖动卡片排序
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1">
-            {organizeMode ? (
-              <button
-                type="button"
-                onClick={() => setOrganizeMode(false)}
-                className="inline-flex h-9 items-center gap-1 rounded-full bg-[var(--pill-active-bg)] px-3.5 text-xs font-semibold text-[var(--pill-active-fg)] transition active:scale-95"
-              >
-                <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-                完成
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchOpen((v) => !v);
-                    if (searchOpen) setQuery('');
-                  }}
-                  aria-label="搜索事件"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg-secondary)] transition hover:bg-[var(--bg-subtle-hover)] active:scale-95"
-                >
-                  {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-                </button>
-                {sortedActiveEvents.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchOpen(false);
-                      setQuery('');
-                      setOrganizeMode(true);
-                    }}
-                    aria-label="排序与置顶"
-                    title="卡片排序与置顶"
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg-secondary)] transition hover:bg-[var(--bg-subtle-hover)] active:scale-95"
-                  >
-                    <ArrowUpDown className="h-4.5 w-4.5" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={onCreateEvent}
-                  aria-label="新建事件"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg-primary)] transition hover:bg-[var(--bg-subtle-hover)] active:scale-95"
-                >
-                  <Plus className="h-6 w-6 stroke-[2.2]" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {searchOpen && !organizeMode && (
-          <div className="mt-3">
-            <input
-              type="search"
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="搜索事件名称..."
-              className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] focus:border-[var(--fg-muted)] focus:outline-none"
-            />
-          </div>
-        )}
-
-        {/* Group Filter Pills + Manage Groups Button */}
-        <div className="no-scrollbar mt-3.5 flex items-center gap-2 overflow-x-auto pb-0.5">
-          <button
-            type="button"
-            onClick={() => setSelectedGroupId('all')}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition active:scale-95 ${
-              selectedGroupId === 'all'
-                ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)] shadow-xs'
-                : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)]'
-            }`}
-          >
-            <Home className="h-3.5 w-3.5" />
-            所有
-          </button>
-
-          {groups.map((grp) => {
-            const active = selectedGroupId === grp.id;
-            return (
-              <button
-                key={grp.id}
-                type="button"
-                onClick={() => setSelectedGroupId(grp.id)}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition active:scale-95 ${
-                  active
-                    ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)] shadow-xs'
-                    : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)]'
-                }`}
-              >
-                {grp.name}
-              </button>
-            );
-          })}
-
-          <button
-            type="button"
-            onClick={onManageGroups}
-            aria-label="管理分组"
-            title="管理分组"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--bg-surface)] text-[var(--fg-muted)] transition hover:text-[var(--fg-primary)] active:scale-95"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </header>
-
-      {/* 2-Column Draggable Event Cards Grid */}
-      <main className="px-4 pt-1">
-        {filteredEvents.length === 0 ? (
-          <div className="mt-10 flex flex-col items-center rounded-[24px] bg-[var(--bg-surface)] px-6 py-12 text-center shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-2xl"
-              style={{
-                backgroundColor: getColorToken('emerald', isDark).soft,
-                color: getColorToken('emerald', isDark).ink,
-              }}
-            >
-              <Plus className="h-6 w-6" />
-            </div>
-            <p className="mt-3 text-sm font-semibold text-[var(--fg-primary)]">
-              {query ? '没有找到匹配的事件' : '还没有事件卡片'}
-            </p>
-            <p className="mt-1 text-xs text-[var(--fg-muted)]">
-              新建一个你常做的事（如引体向上、练琴），随时记录
-            </p>
-            <button
-              type="button"
-              onClick={onCreateEvent}
-              className="mt-4 rounded-full bg-[var(--pill-active-bg)] px-5 py-2 text-xs font-semibold text-[var(--pill-active-fg)] transition active:scale-95"
-            >
-              新建事件
-            </button>
-          </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={filteredEvents.map((e) => e.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="grid grid-cols-2 gap-3">
-                {filteredEvents.map((event) => (
-                  <SortableEventCard
-                    key={event.id}
-                    event={event}
-                    evRecords={recordsByEvent.get(event.id) ?? []}
-                    isDark={isDark}
-                    organizeMode={organizeMode}
-                    onSelect={() => onSelectEvent(event.id)}
-                    onQuickAction={() =>
-                      event.quickMode
-                        ? onQuickRecord(event)
-                        : onOpenRecordSheet(event)
-                    }
-                    onTogglePin={() => handleTogglePin(event)}
-                  />
-                ))}
+                <Plus className="h-6 w-6" />
               </div>
-            </SortableContext>
-          </DndContext>
-        )}
+              <p className="mt-3 text-sm font-semibold text-[var(--fg-primary)]">
+                {query ? '没有找到匹配的事件' : '还没有事件卡片'}
+              </p>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">
+                新建一个你常做的事（如引体向上、练琴），随时记录
+              </p>
+              <button
+                type="button"
+                onClick={onCreateEvent}
+                className="mt-4 rounded-full bg-[var(--pill-active-bg)] px-5 py-2 text-xs font-semibold text-[var(--pill-active-fg)] transition active:scale-95"
+              >
+                新建事件
+              </button>
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={filteredEvents.map((e) => e.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-[repeat(auto-fill,minmax(232px,1fr))] lg:gap-4">
+                  {filteredEvents.map((event) => (
+                    <SortableEventCard
+                      key={event.id}
+                      event={event}
+                      evRecords={recordsByEvent.get(event.id) ?? []}
+                      isDark={isDark}
+                      organizeMode={organizeMode}
+                      onSelect={() => onSelectEvent(event.id)}
+                      onQuickAction={() =>
+                        event.quickMode
+                          ? onQuickRecord(event)
+                          : onOpenRecordSheet(event)
+                      }
+                      onTogglePin={() => handleTogglePin(event)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
       </main>
     </div>
   );

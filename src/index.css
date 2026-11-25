@@ -113,16 +113,35 @@
     accent-color: var(--accent);
   }
 
+  html {
+    scroll-padding-bottom: calc(
+      4.5rem + max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      scroll-padding-bottom: 1.5rem;
+    }
+  }
+
   html,
   body {
     margin: 0;
     padding: 0;
     background-color: var(--bg-canvas);
     color: var(--fg-primary);
+    overflow-wrap: break-word;
     font-family:
       "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB",
       "Microsoft YaHei UI", "Segoe UI", system-ui, -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 }
 
@@ -176,24 +195,26 @@ dialog.daydot-dialog::backdrop {
 
 /* Safe area padding for Android edge-to-edge status/nav bars & mobile sheets
    Supports both Capacitor 8 injected --safe-area-inset-* vars and browser env() */
-.pt-safe {
-  padding-top: calc(
-    1.25rem + max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px))
-  );
-}
+@layer utilities {
+  .pt-safe {
+    padding-top: calc(
+      1.25rem + max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px))
+    );
+  }
 
-.pt-safe-sm {
-  padding-top: calc(
-    0.75rem + max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px))
-  );
-}
+  .pt-safe-sm {
+    padding-top: calc(
+      0.75rem + max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px))
+    );
+  }
 
-.pb-safe {
-  padding-bottom: max(
-    0.75rem,
-    var(--safe-area-inset-bottom, 0px),
-    env(safe-area-inset-bottom, 0px)
-  );
+  .pb-safe {
+    padding-bottom: max(
+      0.75rem,
+      var(--safe-area-inset-bottom, 0px),
+      env(safe-area-inset-bottom, 0px)
+    );
+  }
 }
 
 @keyframes slideUpSheet {

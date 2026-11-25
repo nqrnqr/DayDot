@@ -146,14 +146,14 @@ export function QuickRecordSheet({
           <button
             type="button"
             onClick={handleDelete}
-            className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
+            className={`inline-flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 text-xs font-medium transition-colors ${
               confirmDelete
                 ? 'bg-red-600 text-white'
                 : 'bg-red-500/12 text-red-500 hover:bg-red-500/20'
             }`}
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            {confirmDelete ? '确认删除' : '删除'}
+            <Trash2 className="h-3.5 w-3.5 shrink-0" />
+            <span>{confirmDelete ? '确认删除' : '删除'}</span>
           </button>
         ) : undefined
       }

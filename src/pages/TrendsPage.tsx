@@ -99,7 +99,7 @@ function EventMonthCard({
     <button
       type="button"
       onClick={onSelect}
-      className="daydot-card flex flex-col justify-between rounded-[22px] bg-[var(--bg-surface)] px-4 py-4 text-left transition-transform duration-150 active:scale-[0.98]"
+      className="daydot-card flex flex-col justify-between rounded-[22px] bg-[var(--bg-surface)] px-4 py-4 text-left transition-[transform,box-shadow] duration-150 active:scale-[0.98] lg:p-5 lg:hover:-translate-y-0.5 lg:hover:shadow-[0_6px_22px_rgba(15,23,42,0.06)]"
     >
       {/* Header: Soft circular icon + light-weight title */}
       <div className="mb-4 flex items-center gap-2">
@@ -246,23 +246,36 @@ function EventYearCard({
 
       <div
         ref={scrollRef}
+        tabIndex={0}
+        role="region"
+        aria-label={`${event.name} ${year} 年记录热力图`}
         onClick={(e) => e.stopPropagation()}
-        className="no-scrollbar overflow-x-auto pb-0.5"
+        className="no-scrollbar overflow-x-auto pb-0.5 lg:overflow-visible"
       >
-        <div className="inline-flex gap-[4px]">
+        <div
+          className="inline-flex gap-[4px] lg:grid lg:w-full lg:gap-[3px]"
+          style={{
+            gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+          }}
+        >
           {columns.map((col, cIdx) => (
-            <div key={cIdx} className="flex flex-col gap-[4px]">
+            <div key={cIdx} className="flex flex-col gap-[4px] lg:gap-[3px]">
               {col.days.map((day) => {
                 const inYear = day.date.getFullYear() === year;
                 if (!inYear) {
-                  return <span key={day.dateKey} className="h-[11px] w-[11px]" />;
+                  return (
+                    <span
+                      key={day.dateKey}
+                      className="h-[11px] w-[11px] lg:aspect-square lg:h-auto lg:w-full"
+                    />
+                  );
                 }
                 const cnt = dayCountMap.get(day.dateKey) ?? 0;
                 return (
                   <span
                     key={day.dateKey}
                     title={`${day.dateKey}: ${cnt} 次`}
-                    className="h-[11px] w-[11px] rounded-[2.5px]"
+                    className="h-[11px] w-[11px] rounded-[2.5px] lg:aspect-square lg:h-auto lg:w-full lg:rounded-[3px]"
                     style={{
                       backgroundColor: cellBg(cnt, day.isFuture),
                       opacity:
@@ -473,311 +486,328 @@ export function TrendsPage({
   };
 
   return (
-    <div className="flex flex-col pb-24">
-      <header className="pt-safe sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pb-2.5 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)]">
-              趋势
-            </h1>
-            {sortBadgeText && (
-              <span className="rounded-full bg-[var(--bg-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--fg-secondary)]">
-                {sortBadgeText}
-              </span>
-            )}
-          </div>
+    <div className="flex flex-col pb-24 lg:pb-12">
+      <header className="pt-safe sticky top-0 z-20 bg-[var(--bg-canvas-blur)] px-5 pb-2.5 backdrop-blur-md lg:px-8 lg:pt-7 lg:pb-4">
+        <div className="mx-auto w-full max-w-[1160px]">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-baseline gap-2.5">
+              <h1 className="text-[24px] font-semibold tracking-tight text-[var(--fg-primary)] lg:text-[26px]">
+                趋势
+              </h1>
+              {sortBadgeText && (
+                <span className="rounded-full bg-[var(--bg-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--fg-secondary)] lg:hidden">
+                  {sortBadgeText}
+                </span>
+              )}
+            </div>
 
-          <div className="flex items-center gap-1.5">
-            {groups.length > 0 && (
+            <div className="flex items-center gap-1.5 lg:gap-2">
+              {groups.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFilterOpen((v) => !v)}
+                  aria-label="按分组筛选"
+                  title="按分组筛选"
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95 lg:hidden ${
+                    filterOpen || selectedGroupId !== 'all'
+                      ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)]'
+                      : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)]'
+                  }`}
+                >
+                  <Filter className="h-3.5 w-3.5 stroke-[1.9]" />
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={() => setFilterOpen((v) => !v)}
-                aria-label="按分组筛选"
-                title="按分组筛选"
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95 ${
-                  filterOpen || selectedGroupId !== 'all'
+                onClick={cycleSort}
+                aria-label="切换排序方式"
+                title="切换排序：默认 / 按次数 / 按天数"
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95 lg:h-9 lg:w-auto lg:gap-1.5 lg:px-3.5 lg:text-xs lg:font-medium ${
+                  sortMode !== 'default'
                     ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)]'
-                    : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)]'
+                    : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)] lg:border lg:border-[var(--border-color)] lg:hover:bg-[var(--bg-subtle)]'
                 }`}
               >
-                <Filter className="h-3.5 w-3.5 stroke-[1.9]" />
+                <ArrowUpDown className="h-3.5 w-3.5 stroke-[1.9]" />
+                <span className="hidden lg:inline">
+                  {sortBadgeText ? `排序：${sortBadgeText}` : '默认排序'}
+                </span>
               </button>
-            )}
-
-            <button
-              type="button"
-              onClick={cycleSort}
-              aria-label="切换排序方式"
-              title="切换排序：默认 / 按次数 / 按天数"
-              className={`flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95 ${
-                sortMode !== 'default'
-                  ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)]'
-                  : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)]'
-              }`}
-            >
-              <ArrowUpDown className="h-3.5 w-3.5 stroke-[1.9]" />
-            </button>
+            </div>
           </div>
-        </div>
 
-        {filterOpen && (
-          <div className="no-scrollbar mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-0.5">
-            <button
-              type="button"
-              onClick={() => setSelectedGroupId('all')}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${
-                selectedGroupId === 'all'
-                  ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)]'
-                  : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)]'
+          {groups.length > 0 && (
+            <div
+              className={`no-scrollbar mt-2.5 items-center gap-1.5 overflow-x-auto pb-0.5 lg:mt-3.5 lg:flex ${
+                filterOpen ? 'flex' : 'hidden'
               }`}
             >
-              全部分组
-            </button>
-            {groups.map((g) => (
               <button
-                key={g.id}
                 type="button"
-                onClick={() => setSelectedGroupId(g.id)}
-                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${
-                  selectedGroupId === g.id
+                onClick={() => setSelectedGroupId('all')}
+                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition lg:px-3.5 lg:py-1.5 lg:text-[13px] ${
+                  selectedGroupId === 'all'
                     ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)]'
-                    : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)]'
+                    : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]'
                 }`}
               >
-                {g.name}
+                全部分组
               </button>
-            ))}
-          </div>
-        )}
-      </header>
-
-      <main className="space-y-4 px-4 pt-1">
-        {/* Top 2x2 Lifetime Summary Cards - flat, clean, light typography */}
-        <section className="grid grid-cols-2 gap-3">
-          <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5">
-            <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums">
-              {lifetimeStats.eventTotal}
+              {groups.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setSelectedGroupId(g.id)}
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition lg:px-3.5 lg:py-1.5 lg:text-[13px] ${
+                    selectedGroupId === g.id
+                      ? 'bg-[var(--pill-active-bg)] text-[var(--pill-active-fg)]'
+                      : 'bg-[var(--bg-surface)] text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]'
+                  }`}
+                >
+                  {g.name}
+                </button>
+              ))}
             </div>
-            <div className="mt-1 text-xs text-[var(--fg-muted)]">事件总数</div>
-          </div>
-
-          <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5">
-            <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums">
-              {lifetimeStats.recordTotal}
-            </div>
-            <div className="mt-1 text-xs text-[var(--fg-muted)]">记录次数</div>
-          </div>
-
-          <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5">
-            <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums">
-              {lifetimeStats.usageDays}
-            </div>
-            <div className="mt-1 text-xs text-[var(--fg-muted)]">使用天数</div>
-          </div>
-
-          <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5">
-            <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums">
-              {lifetimeStats.recordDays}
-            </div>
-            <div className="mt-1 text-xs text-[var(--fg-muted)]">记录天数</div>
-          </div>
-        </section>
-
-        {/* Full-pill 周 | 月 | 年 Segmented Control */}
-        <div
-          role="tablist"
-          aria-label="趋势时间维度"
-          className="grid grid-cols-3 rounded-full bg-[var(--bg-subtle)] p-1"
-        >
-          {(
-            [
-              ['week', '周'],
-              ['month', '月'],
-              ['year', '年'],
-            ] as [TrendTab, string][]
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
-              className={`rounded-full py-1.5 text-[13px] font-medium transition ${
-                tab === id
-                  ? 'bg-[var(--bg-surface)] text-[var(--fg-primary)]'
-                  : 'text-[var(--fg-muted)]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Date Range Stepper: centered date never shifts; minimal '今' circle pinned right */}
-        <div className="relative flex min-h-8 items-center justify-center">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => shiftPeriod(-1)}
-              aria-label="上一周期"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle-hover)]"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-[13px] font-medium text-[var(--fg-muted)] tabular-nums">
-              {rangeLabel}
-            </span>
-            <button
-              type="button"
-              onClick={() => shiftPeriod(1)}
-              aria-label="下一周期"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle-hover)]"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {!isCurrentPeriod && (
-            <button
-              type="button"
-              onClick={() => setAnchor(new Date())}
-              aria-label={resetLabel}
-              title={resetLabel}
-              className="absolute right-0 flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition active:scale-90"
-              style={{ backgroundColor: emerald.soft, color: emerald.ink }}
-            >
-              今
-            </button>
           )}
         </div>
+      </header>
 
-        {visibleEvents.length === 0 ? (
-          <div className="rounded-[22px] bg-[var(--bg-surface)] py-12 text-center text-xs text-[var(--fg-muted)]">
-            当前筛选下暂无事件
+      <main className="px-4 pt-1 lg:px-8 lg:pt-2">
+        <div className="mx-auto w-full max-w-[1160px] space-y-4 lg:space-y-5">
+          {/* Top Lifetime Summary Cards: 2x2 on mobile, 4-col row on desktop */}
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5 lg:px-5 lg:py-4">
+              <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums lg:text-[26px]">
+                {lifetimeStats.eventTotal}
+              </div>
+              <div className="mt-1 text-xs text-[var(--fg-muted)]">事件总数</div>
+            </div>
+
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5 lg:px-5 lg:py-4">
+              <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums lg:text-[26px]">
+                {lifetimeStats.recordTotal}
+              </div>
+              <div className="mt-1 text-xs text-[var(--fg-muted)]">记录次数</div>
+            </div>
+
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5 lg:px-5 lg:py-4">
+              <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums lg:text-[26px]">
+                {lifetimeStats.usageDays}
+              </div>
+              <div className="mt-1 text-xs text-[var(--fg-muted)]">使用天数</div>
+            </div>
+
+            <div className="daydot-card rounded-[20px] bg-[var(--bg-surface)] px-4 py-3.5 lg:px-5 lg:py-4">
+              <div className="text-[22px] leading-tight font-medium text-[var(--fg-primary)] tabular-nums lg:text-[26px]">
+                {lifetimeStats.recordDays}
+              </div>
+              <div className="mt-1 text-xs text-[var(--fg-muted)]">记录天数</div>
+            </div>
+          </section>
+
+          {/* Segmented Control + Date Stepper (stacked on mobile, sleek single toolbar on desktop) */}
+          <div className="space-y-3 lg:flex lg:items-center lg:justify-between lg:space-y-0 lg:rounded-[20px] lg:bg-[var(--bg-surface)] lg:px-4 lg:py-2.5">
+            <div
+              role="tablist"
+              aria-label="趋势时间维度"
+              className="grid grid-cols-3 rounded-full bg-[var(--bg-subtle)] p-1 lg:w-[240px]"
+            >
+              {(
+                [
+                  ['week', '周'],
+                  ['month', '月'],
+                  ['year', '年'],
+                ] as [TrendTab, string][]
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === id}
+                  onClick={() => setTab(id)}
+                  className={`rounded-full py-1.5 text-[13px] font-medium transition ${
+                    tab === id
+                      ? 'bg-[var(--bg-surface)] text-[var(--fg-primary)] shadow-xs'
+                      : 'text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Date Range Stepper */}
+            <div className="relative flex min-h-8 items-center justify-center lg:gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => shiftPeriod(-1)}
+                  aria-label="上一周期"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle-hover)]"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-[13px] font-medium text-[var(--fg-muted)] tabular-nums lg:text-sm lg:text-[var(--fg-primary)]">
+                  {rangeLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => shiftPeriod(1)}
+                  aria-label="下一周期"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle-hover)]"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              {!isCurrentPeriod && (
+                <button
+                  type="button"
+                  onClick={() => setAnchor(new Date())}
+                  aria-label={resetLabel}
+                  title={resetLabel}
+                  className="absolute right-0 flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition active:scale-90 lg:static"
+                  style={{ backgroundColor: emerald.soft, color: emerald.ink }}
+                >
+                  今
+                </button>
+              )}
+            </div>
           </div>
-        ) : (
-          <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-            {/* WEEK VIEW: Airy 7-Day Circle Matrix */}
-            {tab === 'week' && (
-              <section className="daydot-card rounded-[24px] bg-[var(--bg-surface)] px-4 py-4">
-                <div className="mb-3.5 grid grid-cols-[minmax(0,1fr)_repeat(7,25px)] items-center gap-1.5">
-                  <div />
-                  {['一', '二', '三', '四', '五', '六', '日'].map((w, idx) => {
-                    const isTodayCol =
-                      toDateKey(weekInfo.days[idx]) === toDateKey(new Date());
-                    return (
-                      <div
-                        key={w}
-                        className={`text-center text-xs font-normal ${
-                          isTodayCol
-                            ? 'font-medium text-[var(--fg-primary)]'
-                            : 'text-[var(--fg-muted)]'
-                        }`}
-                      >
-                        {w}
-                      </div>
-                    );
-                  })}
-                </div>
 
-                <div className="space-y-3.5">
-                  {visibleEvents.map((ev) => {
-                    const color = getColorToken(ev.color, isDark);
-                    const dayMap = countsByEventDay.get(ev.id);
-
-                    return (
-                      <button
-                        key={ev.id}
-                        type="button"
-                        onClick={() => onSelectEvent(ev.id)}
-                        className="grid w-full grid-cols-[minmax(0,1fr)_repeat(7,25px)] items-center gap-1.5 rounded-xl py-0.5 text-left transition hover:bg-[var(--bg-canvas)] active:scale-[0.99]"
-                      >
-                        <div className="flex min-w-0 items-center gap-2 pr-1">
-                          <div
-                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                            style={{ backgroundColor: color.soft, color: color.ink }}
-                          >
-                            <EventIcon
-                              name={ev.icon}
-                              className="h-3.5 w-3.5 stroke-[1.9]"
-                            />
-                          </div>
-                          <span className="truncate text-[14px] font-normal text-[var(--fg-primary)]">
-                            {ev.name}
-                          </span>
+          {visibleEvents.length === 0 ? (
+            <div className="rounded-[22px] bg-[var(--bg-surface)] py-12 text-center text-xs text-[var(--fg-muted)]">
+              当前筛选下暂无事件
+            </div>
+          ) : (
+            <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+              {/* WEEK VIEW: Airy 7-Day Circle Matrix */}
+              {tab === 'week' && (
+                <section className="daydot-card rounded-[24px] bg-[var(--bg-surface)] px-4 py-4 lg:px-6 lg:py-5">
+                  <div className="mb-3.5 grid grid-cols-[minmax(0,1fr)_repeat(7,25px)] items-center gap-1.5 lg:mb-4 lg:grid-cols-[minmax(0,1fr)_repeat(7,48px)] xl:grid-cols-[minmax(0,1fr)_repeat(7,56px)]">
+                    <div className="hidden text-xs font-medium text-[var(--fg-muted)] lg:block">
+                      事件
+                    </div>
+                    <div className="lg:hidden" />
+                    {['一', '二', '三', '四', '五', '六', '日'].map((w, idx) => {
+                      const isTodayCol =
+                        toDateKey(weekInfo.days[idx]) === toDateKey(new Date());
+                      return (
+                        <div
+                          key={w}
+                          className={`text-center text-xs font-normal ${
+                            isTodayCol
+                              ? 'font-medium text-[var(--fg-primary)]'
+                              : 'text-[var(--fg-muted)]'
+                          }`}
+                        >
+                          <span className="lg:hidden">{w}</span>
+                          <span className="hidden lg:inline">周{w}</span>
                         </div>
+                      );
+                    })}
+                  </div>
 
-                        {weekInfo.days.map((d) => {
-                          const key = toDateKey(d);
-                          const cnt = dayMap?.get(key) ?? 0;
-                          const isFuture = d.getTime() > todayEndTs;
+                  <div className="space-y-3.5 lg:space-y-2.5">
+                    {visibleEvents.map((ev) => {
+                      const color = getColorToken(ev.color, isDark);
+                      const dayMap = countsByEventDay.get(ev.id);
 
-                          return (
-                            <span
-                              key={key}
-                              title={`${ev.name} · ${key}: ${cnt} 次`}
-                              className="mx-auto flex h-[19px] w-[19px] items-center justify-center rounded-full text-[10px] font-medium"
-                              style={
-                                cnt > 0
-                                  ? {
-                                      backgroundColor: color.solid,
-                                      color: '#FFFFFF',
-                                    }
-                                  : {
-                                      backgroundColor: isFuture
-                                        ? 'var(--heatmap-empty)'
-                                        : color.soft,
-                                      opacity: !isFuture ? (isDark ? 0.58 : 0.82) : 0.72,
-                                    }
-                              }
+                      return (
+                        <button
+                          key={ev.id}
+                          type="button"
+                          onClick={() => onSelectEvent(ev.id)}
+                          className="grid w-full grid-cols-[minmax(0,1fr)_repeat(7,25px)] items-center gap-1.5 rounded-xl py-0.5 text-left transition hover:bg-[var(--bg-canvas)] active:scale-[0.99] lg:grid-cols-[minmax(0,1fr)_repeat(7,48px)] lg:px-2 lg:py-2 xl:grid-cols-[minmax(0,1fr)_repeat(7,56px)]"
+                        >
+                          <div className="flex min-w-0 items-center gap-2 pr-1 lg:gap-2.5">
+                            <div
+                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full lg:h-7 lg:w-7"
+                              style={{ backgroundColor: color.soft, color: color.ink }}
                             >
-                              {cnt > 1 ? cnt : ''}
+                              <EventIcon
+                                name={ev.icon}
+                                className="h-3.5 w-3.5 stroke-[1.9] lg:h-4 lg:w-4"
+                              />
+                            </div>
+                            <span className="truncate text-[14px] font-normal text-[var(--fg-primary)] lg:font-medium">
+                              {ev.name}
                             </span>
-                          );
-                        })}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
+                          </div>
 
-            {/* MONTH VIEW: 2-Column Per-Event Mini Calendars */}
-            {tab === 'month' && (
-              <section className="grid grid-cols-2 gap-3">
-                {visibleEvents.map((ev) => (
-                  <EventMonthCard
-                    key={ev.id}
-                    event={ev}
-                    dayCountMap={countsByEventDay.get(ev.id) ?? new Map()}
-                    year={anchor.getFullYear()}
-                    monthIndex={anchor.getMonth()}
-                    todayEndTs={todayEndTs}
-                    isDark={isDark}
-                    onSelect={() => onSelectEvent(ev.id)}
-                  />
-                ))}
-              </section>
-            )}
+                          {weekInfo.days.map((d) => {
+                            const key = toDateKey(d);
+                            const cnt = dayMap?.get(key) ?? 0;
+                            const isFuture = d.getTime() > todayEndTs;
 
-            {/* YEAR VIEW: Stacked Full-Year Heatmap Cards */}
-            {tab === 'year' && (
-              <section className="space-y-3">
-                {visibleEvents.map((ev) => (
-                  <EventYearCard
-                    key={ev.id}
-                    event={ev}
-                    dayCountMap={countsByEventDay.get(ev.id) ?? new Map()}
-                    year={anchor.getFullYear()}
-                    columns={annualColumns}
-                    isDark={isDark}
-                    onSelect={() => onSelectEvent(ev.id)}
-                  />
-                ))}
-              </section>
-            )}
-          </div>
-        )}
+                            return (
+                              <span
+                                key={key}
+                                title={`${ev.name} · ${key}: ${cnt} 次`}
+                                className="mx-auto flex h-[19px] w-[19px] items-center justify-center rounded-full text-[10px] font-medium lg:h-[24px] lg:w-[24px] lg:text-[11px]"
+                                style={
+                                  cnt > 0
+                                    ? {
+                                        backgroundColor: color.solid,
+                                        color: '#FFFFFF',
+                                      }
+                                    : {
+                                        backgroundColor: isFuture
+                                          ? 'var(--heatmap-empty)'
+                                          : color.soft,
+                                        opacity: !isFuture ? (isDark ? 0.58 : 0.82) : 0.72,
+                                      }
+                                }
+                              >
+                                {cnt > 1 ? cnt : ''}
+                              </span>
+                            );
+                          })}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+
+              {/* MONTH VIEW: Adaptive Multi-Column Per-Event Mini Calendars */}
+              {tab === 'month' && (
+                <section className="grid grid-cols-2 gap-3 lg:grid-cols-[repeat(auto-fill,minmax(236px,1fr))] lg:gap-4">
+                  {visibleEvents.map((ev) => (
+                    <EventMonthCard
+                      key={ev.id}
+                      event={ev}
+                      dayCountMap={countsByEventDay.get(ev.id) ?? new Map()}
+                      year={anchor.getFullYear()}
+                      monthIndex={anchor.getMonth()}
+                      todayEndTs={todayEndTs}
+                      isDark={isDark}
+                      onSelect={() => onSelectEvent(ev.id)}
+                    />
+                  ))}
+                </section>
+              )}
+
+              {/* YEAR VIEW: Full-Width Stacked Annual Heatmap Cards */}
+              {tab === 'year' && (
+                <section className="space-y-3 lg:space-y-4">
+                  {visibleEvents.map((ev) => (
+                    <EventYearCard
+                      key={ev.id}
+                      event={ev}
+                      dayCountMap={countsByEventDay.get(ev.id) ?? new Map()}
+                      year={anchor.getFullYear()}
+                      columns={annualColumns}
+                      isDark={isDark}
+                      onSelect={() => onSelectEvent(ev.id)}
+                    />
+                  ))}
+                </section>
+              )}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

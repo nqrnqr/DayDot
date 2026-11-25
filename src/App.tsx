@@ -584,16 +584,16 @@ export function App() {
           <div
             role="status"
             aria-live="polite"
-            className="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full bg-[var(--pill-active-bg)] px-4 py-2.5 text-xs font-medium text-[var(--pill-active-fg)] shadow-lg backdrop-blur-md"
+            className="fixed bottom-20 left-1/2 z-40 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2.5 rounded-full bg-[var(--pill-active-bg)] px-4 py-2.5 text-xs font-medium text-[var(--pill-active-fg)] shadow-lg backdrop-blur-md"
           >
-            <span>{toast.message}</span>
+            <span className="truncate">{toast.message}</span>
             {toast.undoRecordId && (
               <button
                 type="button"
                 onClick={handleUndoRecord}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-semibold text-emerald-400 hover:bg-emerald-500/30"
+                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-semibold text-emerald-400 hover:bg-emerald-500/30"
               >
-                <Undo2 className="h-3 w-3" />
+                <Undo2 className="h-3 w-3 shrink-0" />
                 撤销
               </button>
             )}

@@ -36,15 +36,9 @@ export async function initNativeUpdater(): Promise<void> {
 }
 
 export async function getActiveAppVersion(): Promise<string> {
-  if (!isNativeAndroid()) return BUILTIN_APP_VERSION;
-  try {
-    const info = await CapacitorUpdater.current();
-    if (info?.bundle?.version && info.bundle.version !== 'builtin') {
-      return info.bundle.version;
-    }
-  } catch {
-    // Fallback to built-in version
-  }
+  // Always report the version baked into the actually executing JS bundle.
+  // Native CapacitorUpdater.current() can temporarily lead ahead of WebView
+  // if a hot reload hasn't torn down the old JS context yet.
   return BUILTIN_APP_VERSION;
 }
 
@@ -138,7 +132,18 @@ export async function downloadAndApplyOta(
       checksum: manifest.checksum,
     });
     onProgress?.(100);
+    // Clear hash route (e.g. #settings) before set() so Chromium WebView
+    // never treats loading https://localhost/ as a same-document hash jump.
+    try {
+      window.history.replaceState(null, '', '/');
+    } catch {
+      // Non-fatal
+    }
     await CapacitorUpdater.set(bundle);
+    // Fallback: if WebView didn't tear down the old JS context immediately, force a fresh document load
+    window.setTimeout(() => {
+      window.location.replace(`/?_ota=${Date.now()}`);
+    }, 120);
   } catch (err) {
     const baseMsg = err instanceof Error ? err.message : String(err);
     const detail =

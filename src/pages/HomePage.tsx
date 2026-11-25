@@ -89,10 +89,16 @@ function SortableEventCard({
     const prev = prevTodayCountRef.current;
     prevTodayCountRef.current = todayRecs.length;
     if (todayRecs.length > prev) {
-      setBurstSeq((n) => n + 1);
-      setCelebrating(true);
-      const timer = window.setTimeout(() => setCelebrating(false), 620);
-      return () => window.clearTimeout(timer);
+      let endTimer: number | undefined;
+      const startTimer = window.setTimeout(() => {
+        setBurstSeq((n) => n + 1);
+        setCelebrating(true);
+        endTimer = window.setTimeout(() => setCelebrating(false), 780);
+      }, 90);
+      return () => {
+        window.clearTimeout(startTimer);
+        if (endTimer !== undefined) window.clearTimeout(endTimer);
+      };
     }
   }, [todayRecs.length]);
 
@@ -184,12 +190,27 @@ function SortableEventCard({
         ) : (
           <div className="relative flex items-center justify-center">
             {celebrating && (
-              <span
-                key={`halo-${burstSeq}`}
-                aria-hidden="true"
-                className="daydot-halo-ring pointer-events-none absolute inset-0 rounded-full border-2"
-                style={{ borderColor: color.solid }}
-              />
+              <>
+                <span
+                  key={`halo-${burstSeq}`}
+                  aria-hidden="true"
+                  className="daydot-halo-ring pointer-events-none absolute inset-0 rounded-full border-2"
+                  style={{ borderColor: color.solid }}
+                />
+                {[0, 60, 120, 180, 240, 300].map((deg) => (
+                  <span
+                    key={`dot-${burstSeq}-${deg}`}
+                    aria-hidden="true"
+                    className="daydot-burst-dot pointer-events-none absolute h-1.5 w-1.5 rounded-full"
+                    style={
+                      {
+                        backgroundColor: color.solid,
+                        '--dot-angle': `${deg}deg`,
+                      } as React.CSSProperties
+                    }
+                  />
+                ))}
+              </>
             )}
             <button
               type="button"

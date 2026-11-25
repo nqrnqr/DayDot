@@ -45,6 +45,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
 
     private View rootContent;
+    private boolean swCleanupScheduled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +79,35 @@ public class MainActivity extends BridgeActivity {
             // Prevent stale WebView HTTP cache from serving old index.html after OTA switches
             webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
             webView.addJavascriptInterface(new DayDotNativeBridge(), "DayDotNative");
+            // Defense-in-depth: unregister any legacy Workbox SW even if it served stale HTML
+            if (!swCleanupScheduled) {
+                swCleanupScheduled = true;
+                webView.postDelayed(() -> clearLegacyServiceWorkers(webView), 500);
+            }
         }
+    }
+
+    private void clearLegacyServiceWorkers(WebView webView) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        String script =
+            "(function(){" +
+            "if(!('serviceWorker' in navigator))return;" +
+            "navigator.serviceWorker.getRegistrations().then(function(regs){" +
+            "if(!regs||!regs.length)return;" +
+            "Promise.all(regs.map(function(r){return r.unregister();})).then(function(){" +
+            "var clearC=('caches' in window)" +
+            "?caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));})" +
+            ":Promise.resolve();" +
+            "clearC.finally(function(){" +
+            "if(window.DayDotNative&&window.DayDotNative.hardReload){window.DayDotNative.hardReload();}" +
+            "else{window.location.replace('/?_sw_reset='+Date.now());}" +
+            "});" +
+            "});" +
+            "}).catch(function(){});" +
+            "})();";
+        webView.evaluateJavascript(script, null);
     }
 
     private void applyBarTheme(boolean isDark, String hexColor) {

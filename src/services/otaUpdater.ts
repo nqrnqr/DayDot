@@ -43,8 +43,14 @@ export async function initNativeUpdater(): Promise<void> {
       return;
     }
 
-    if (url.searchParams.has(OTA_RETRY_PARAM)) {
-      url.searchParams.delete(OTA_RETRY_PARAM);
+    let urlDirty = false;
+    for (const param of [OTA_RETRY_PARAM, '_ota', '_sw_reset']) {
+      if (url.searchParams.has(param)) {
+        url.searchParams.delete(param);
+        urlDirty = true;
+      }
+    }
+    if (urlDirty) {
       window.history.replaceState(window.history.state, '', url);
     }
     await CapacitorUpdater.notifyAppReady();

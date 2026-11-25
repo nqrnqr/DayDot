@@ -1,10 +1,59 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const base = process.env.BASE_PATH || '/';
 const isCapacitorBuild = process.env.CAPACITOR_BUILD === '1';
+
+const CAPACITOR_SW_KILL_SWITCH = `// Self-destructing Service Worker for native Capacitor Android builds.
+// Replaces any legacy Workbox sw.js left over from early APK installs (v1.0.3-v1.0.8),
+// clears stale CacheStorage (leaving IndexedDB and localStorage untouched),
+// unregisters itself, and reloads open windows onto the active native/OTA bundle.
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      } catch {}
+      try {
+        await self.registration.unregister();
+      } catch {}
+      try {
+        const clients = await self.clients.matchAll({
+          type: 'window',
+          includeUncontrolled: true,
+        });
+        for (const client of clients) {
+          if ('navigate' in client) {
+            const target = new URL('/', client.url);
+            target.searchParams.set('_sw_reset', String(Date.now()));
+            await client.navigate(target.href).catch(() => {});
+          }
+        }
+      } catch {}
+    })(),
+  );
+});
+`;
+
+function capacitorSwKillSwitchPlugin(): Plugin {
+  return {
+    name: 'daydot-capacitor-sw-kill-switch',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'sw.js',
+        source: CAPACITOR_SW_KILL_SWITCH,
+      });
+    },
+  };
+}
 
 export default defineConfig({
   base,
@@ -53,7 +102,7 @@ export default defineConfig({
             },
           }),
         ]
-      : []),
+      : [capacitorSwKillSwitchPlugin()]),
   ],
   server: {
     host: true,

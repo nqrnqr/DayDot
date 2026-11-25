@@ -159,6 +159,17 @@ export async function downloadAndApplyOta(
     window.history.replaceState(window.history.state, '', restartUrl);
     try {
       await CapacitorUpdater.set({ id: bundle.id });
+      // Fallback: if WebView kept the old JS context alive, force native cache clear + reload
+      window.setTimeout(() => {
+        const nativeBridge = (
+          window as unknown as { DayDotNative?: { hardReload?: () => void } }
+        ).DayDotNative;
+        if (nativeBridge?.hardReload) {
+          nativeBridge.hardReload();
+        } else {
+          window.location.replace(`/?_ota=${Date.now()}`);
+        }
+      }, 150);
     } catch (err) {
       if (window.location.href === restartUrl.href) {
         window.history.replaceState(window.history.state, '', previousUrl);

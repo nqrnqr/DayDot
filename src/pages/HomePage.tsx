@@ -231,7 +231,7 @@ function SortableEventCard({
                     ? '一键速记（按默认值）'
                     : '打开记录确认弹窗'
               }
-              className={`relative z-10 flex h-9 w-9 appearance-none items-center justify-center rounded-full transition-transform duration-200 active:scale-90 ${
+              className={`relative z-10 flex h-9 w-9 appearance-none items-center justify-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-90 ${
                 celebrating ? 'daydot-btn-pop' : ''
               } ${
                 doneToday

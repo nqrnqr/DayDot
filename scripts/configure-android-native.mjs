@@ -33,6 +33,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -74,6 +75,8 @@ public class MainActivity extends BridgeActivity {
 
         if (this.bridge != null && this.bridge.getWebView() != null) {
             WebView webView = this.bridge.getWebView();
+            // Prevent stale WebView HTTP cache from serving old index.html after OTA switches
+            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
             webView.addJavascriptInterface(new DayDotNativeBridge(), "DayDotNative");
         }
     }
@@ -102,6 +105,17 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public void setSystemBarTheme(final boolean isDark, final String hexColor) {
             runOnUiThread(() -> applyBarTheme(isDark, hexColor));
+        }
+
+        @JavascriptInterface
+        public void hardReload() {
+            runOnUiThread(() -> {
+                if (bridge != null && bridge.getWebView() != null) {
+                    WebView wv = bridge.getWebView();
+                    wv.clearCache(true);
+                    wv.loadUrl(bridge.getAppUrl() + "/?_ota=" + System.currentTimeMillis());
+                }
+            });
         }
     }
 }

@@ -317,7 +317,7 @@ export function SettingsPage({
                     <div className="truncate text-[11px] text-[var(--fg-muted)]">
                       {pendingOta
                         ? `发现新版 v${pendingOta.version}，无需重装 APK`
-                        : `当前版本 v${appVersion}`}
+                        : `页面运行版本 v${appVersion}`}
                     </div>
                   </div>
                 </div>

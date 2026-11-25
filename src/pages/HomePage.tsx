@@ -100,6 +100,7 @@ function SortableEventCard({
         if (endTimer !== undefined) window.clearTimeout(endTimer);
       };
     }
+    if (todayRecs.length < prev) setCelebrating(false);
   }, [todayRecs.length]);
 
   let subtitle = '-';
@@ -230,11 +231,11 @@ function SortableEventCard({
                     ? '一键速记（按默认值）'
                     : '打开记录确认弹窗'
               }
-              className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-90 ${
+              className={`relative z-10 flex h-9 w-9 appearance-none items-center justify-center rounded-full transition-transform duration-200 active:scale-90 ${
                 celebrating ? 'daydot-btn-pop' : ''
               } ${
                 doneToday
-                  ? 'text-white'
+                  ? ''
                   : 'bg-[var(--bg-subtle)] text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle-hover)]'
               }`}
               style={
@@ -351,6 +352,7 @@ export function HomePage({
       const timer = window.setTimeout(() => setTodayPillPop(false), 480);
       return () => window.clearTimeout(timer);
     }
+    if (todayCount < prev) setTodayPillPop(false);
   }, [todayCount]);
 
   const handleTogglePin = async (event: EventItem) => {

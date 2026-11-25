@@ -21,14 +21,32 @@ export const BUILTIN_APP_VERSION: string =
 export const OTA_MANIFEST_URL: string =
   (import.meta.env.VITE_OTA_MANIFEST_URL as string | undefined) || '';
 
+const OTA_RETRY_PARAM = '_ota_retry';
+
 export function isNativeAndroid(): boolean {
   return Capacitor.isNativePlatform();
 }
 
-/** Notify native updater that the current bundle booted cleanly (prevents auto-rollback) */
 export async function initNativeUpdater(): Promise<void> {
   if (!isNativeAndroid()) return;
   try {
+    const current = await CapacitorUpdater.current().catch(() => null);
+    const bundle = current?.bundle;
+    const url = new URL(window.location.href);
+    if (bundle?.version && bundle.version !== 'builtin' && bundle.version !== BUILTIN_APP_VERSION) {
+      // A cached document can start successfully while running the wrong bundle.
+      // Retry once at a fresh URL and let Capgo handle rollback if it still fails.
+      if (url.searchParams.get(OTA_RETRY_PARAM) !== bundle.id) {
+        url.searchParams.set(OTA_RETRY_PARAM, bundle.id);
+        window.location.replace(url);
+      }
+      return;
+    }
+
+    if (url.searchParams.has(OTA_RETRY_PARAM)) {
+      url.searchParams.delete(OTA_RETRY_PARAM);
+      window.history.replaceState(window.history.state, '', url);
+    }
     await CapacitorUpdater.notifyAppReady();
   } catch {
     // Non-fatal
@@ -132,18 +150,21 @@ export async function downloadAndApplyOta(
       checksum: manifest.checksum,
     });
     onProgress?.(100);
-    // Clear hash route (e.g. #settings) before set() so Chromium WebView
-    // never treats loading https://localhost/ as a same-document hash jump.
+    // Change the current document URL before Capgo navigates to the app URL.
+    // set() can destroy this JS context without resolving its promise.
+    const previousUrl = window.location.href;
+    const restartUrl = new URL(previousUrl);
+    restartUrl.hash = '';
+    restartUrl.searchParams.set('_ota', bundle.id);
+    window.history.replaceState(window.history.state, '', restartUrl);
     try {
-      window.history.replaceState(null, '', '/');
-    } catch {
-      // Non-fatal
+      await CapacitorUpdater.set({ id: bundle.id });
+    } catch (err) {
+      if (window.location.href === restartUrl.href) {
+        window.history.replaceState(window.history.state, '', previousUrl);
+      }
+      throw err;
     }
-    await CapacitorUpdater.set(bundle);
-    // Fallback: if WebView didn't tear down the old JS context immediately, force a fresh document load
-    window.setTimeout(() => {
-      window.location.replace(`/?_ota=${Date.now()}`);
-    }, 120);
   } catch (err) {
     const baseMsg = err instanceof Error ? err.message : String(err);
     const detail =

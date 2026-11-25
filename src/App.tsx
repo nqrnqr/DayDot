@@ -21,7 +21,6 @@ import {
   type GitHubSyncConfig,
   type SyncStatusMeta,
 } from './services/githubSync';
-import { initNativeUpdater } from './services/otaUpdater';
 import { useThemeMode } from './utils/themeMode';
 import { HomePage } from './pages/HomePage';
 import { EventDetailPage } from './pages/EventDetailPage';
@@ -161,7 +160,6 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    void initNativeUpdater();
     ensureSeeded().then(() => setReady(true));
   }, []);
 
@@ -584,9 +582,9 @@ export function App() {
           <div
             role="status"
             aria-live="polite"
-            className="fixed bottom-20 left-1/2 z-40 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2.5 rounded-full bg-[var(--pill-active-bg)] px-4 py-2.5 text-xs font-medium text-[var(--pill-active-fg)] shadow-lg backdrop-blur-md"
+            className="fixed inset-x-0 bottom-20 z-40 mx-auto flex w-max max-w-[calc(100%_-_2rem)] items-center gap-2.5 rounded-full bg-[var(--pill-active-bg)] px-4 py-2.5 text-xs font-medium text-[var(--pill-active-fg)] shadow-lg backdrop-blur-md"
           >
-            <span className="truncate">{toast.message}</span>
+            <span className="min-w-0 truncate">{toast.message}</span>
             {toast.undoRecordId && (
               <button
                 type="button"
